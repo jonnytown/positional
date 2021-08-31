@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <ItemsProjectGuid>{343542cf-8203-4d12-85c9-1c512640e4c8}</ItemsProjectGuid>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MSBuildThisFileDirectory)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectCapability Include="SourceItemsFromImports" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\collision\broadphase\ABroadphase.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\collision\broadphase\BoundsTree.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\collision\broadphase\DBTBroadphase.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\collision\collider\ACollider.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\collision\collider\BoxCollider.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\collision\collider\CapsuleCollider.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\collision\collider\SphereCollider.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\collision\narrowphase\ANarrowphase.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\collision\narrowphase\CollisionResult.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\collision\narrowphase\ContactPoint.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\collision\narrowphase\RaycastResult.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\mass\MassComputer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\mass\Volume.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\math\Bounds.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\math\GeomUtil.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\math\Mat3x3.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\math\Mat4x4.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\math\Math.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\math\Primitives.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\math\Quat.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\math\Ray.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\math\Util.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\math\Vec3.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\math\Vec4.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\simulation\ABody.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\simulation\Particle.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)src\simulation\RigidBody.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\collision\broadphase\BoundsTree.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\collision\broadphase\DBTBroadphase.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\collision\collider\ACollider.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\math\GeomUtil.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\math\Util.cpp" />
+  </ItemGroup>
+</Project>
