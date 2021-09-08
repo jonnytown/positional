@@ -67,11 +67,15 @@ namespace Positional::Collision
 		UInt32 findBestSibling(const Bounds &bounds) const;
 		void refit(const UInt32 &startHandle);
 
-		inline UInt32 nextHandle() { return ++m_nextHandle; }
+		inline UInt32 nextHandle() {
+			return m_nextHandle++;
+		}
 
 	public:
 		BoundsTree()
 		{
+			m_nodes = unordered_map<UInt32, Node>();
+			m_leaves = unordered_set<UInt32>();
 			m_nextHandle = 0;
 			m_root = NOT_FOUND;
 		}
@@ -84,6 +88,14 @@ namespace Positional::Collision
 		void raycast(const Ray &ray, const Float &maxDistance, const UInt32 &mask, const ResultCallback &resultsCallback) const;
 		void intersects(const Bounds &bounds, const UInt32 &mask, const ResultCallback &resultsCallback, const bool &exclusive = false) const;
 		void generateOverlapPairs(const ResultPairCallback &resultsCallback, const bool &exclusive = false) const;
+
+		void forEachNode(const function<void(Bounds)> &callback)
+		{
+			for (const auto &[handle, node] : m_nodes)
+			{
+				callback(node.bounds);
+			}
+		}
 	};
 
 }

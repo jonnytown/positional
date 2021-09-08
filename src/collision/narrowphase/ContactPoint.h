@@ -4,7 +4,7 @@
 #ifndef CONTACT_POINT_H
 #define CONTACT_POINT_H
 
-#include "collision/collider/ACollider.h"
+#include "collision/collider/Collider.h"
 
 namespace Positional::Collision
 {

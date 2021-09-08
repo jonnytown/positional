@@ -4,56 +4,54 @@
 #ifndef BOX_COLLIDER_H
 #define BOX_COLLIDER_H
 
-#include "ACollider.h"
+#include "ShapeId.h"
 #include "mass/Volume.h"
 
-namespace Positional
+namespace Positional::Collision
 {
-	class BoxCollider : public Collider
+	struct BoxCollider final
 	{
-	public:
-		BoxCollider(const Vec3 &_center, const Vec3 &_extents, const Float &_density)
-			: Collider(_center, Quat::identity, _density)
-		{
-			extents = _extents;
-		}
-	
-		inline virtual Bounds bounds() const {
-			Bounds bounds(pointToWorld(extents), Vec3::zero);
-			bounds.merge(pointToWorld(Vec3(extents.x, -extents.y, extents.z)));
-			bounds.merge(pointToWorld(Vec3(extents.x, -extents.y, -extents.z)));
-			bounds.merge(pointToWorld(Vec3(extents.x, extents.y, -extents.z)));
+		static UInt8 shapeId() { return ShapeId::Box; }
 
-			bounds.merge(pointToWorld(Vec3(-extents.x, extents.y, extents.z)));
-			bounds.merge(pointToWorld(Vec3(-extents.x, -extents.y, extents.z)));
-			bounds.merge(pointToWorld(-extents));
-			bounds.merge(pointToWorld(Vec3(-extents.x, extents.y, -extents.z)));
+		static Bounds bounds(const Collider &collider) {
+			const Vec3 &extents = collider.shape.extents;
+			Bounds bounds(collider.pointToWorld(extents), Vec3::zero);
+			bounds.merge(collider.pointToWorld(Vec3(extents.x, -extents.y, extents.z)));
+			bounds.merge(collider.pointToWorld(Vec3(extents.x, -extents.y, -extents.z)));
+			bounds.merge(collider.pointToWorld(Vec3(extents.x, extents.y, -extents.z)));
+
+			bounds.merge(collider.pointToWorld(Vec3(-extents.x, extents.y, extents.z)));
+			bounds.merge(collider.pointToWorld(Vec3(-extents.x, -extents.y, extents.z)));
+			bounds.merge(collider.pointToWorld(-extents));
+			bounds.merge(collider.pointToWorld(Vec3(-extents.x, extents.y, -extents.z)));
 			return bounds;
 		}
 
-		inline virtual bool raycast(const Ray &ray, const Float &maxDistance, Vec3 &outPoint, Vec3 &outNormal, Float &outDistance) const override
+		static Float volume(const Collider &collider) { return Mass::boxVolume(collider.shape.extents); }
+
+		static bool raycast(const Collider &collider, const Ray &ray, const Float &maxDistance, Vec3 &outPoint, Vec3 &outNormal, Float &outDistance)
 		{
-			Ray rayT(pointToLocal(ray.origin), vectorToLocal(ray.normal()));
-			if (GeomUtil::raycastBox(extents, rayT.origin, rayT.normal(), rayT.invNormal(), maxDistance, outPoint, outNormal, outDistance))
+			Ray rayT(collider.pointToLocal(ray.origin), collider.vectorToLocal(ray.normal()));
+			if (GeomUtil::raycastBox(collider.shape.extents, rayT.origin, rayT.normal(), rayT.invNormal(), maxDistance, outPoint, outNormal, outDistance))
 			{
-				outPoint = pointToWorld(outPoint);
-				outNormal = vectorToWorld(outNormal);
+				outPoint = collider.pointToWorld(outPoint);
+				outNormal = collider.vectorToWorld(outNormal);
 				return true;
 			}
 			return false;
 		}
 
-		inline virtual Vec3 localSupport(const Vec3 &axis) const override
+		static Vec3 localSupport(const Collider &collider, const Vec3 &axis)
 		{
+			const Vec3& extents = collider.shape.extents;
 			return Vec3(
 				Math::sign(axis.x) * extents.x,
 				Math::sign(axis.y) * extents.y,
 				Math::sign(axis.z) * extents.z);
 		}
 
-		inline virtual Float volume() const override { return Mass::boxVolume(extents); }
-
-		inline virtual ColliderShape shape() const override { return ColliderShape::Box; }
+		private:
+			BoxCollider() = delete;
 	};
 }
 #endif // BOX_COLLIDER_H

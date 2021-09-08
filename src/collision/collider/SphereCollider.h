@@ -4,39 +4,32 @@
 #ifndef SPHERE_COLLIDER_H
 #define SPHERE_COLLIDER_H
 
-#include "ACollider.h"
+#include "ShapeId.h"
 #include "mass/Volume.h"
 
-namespace Positional
+namespace Positional::Collision
 {
-	class SphereCollider : public Collider
+	struct SphereCollider final
 	{
-	public:
-		SphereCollider(const Vec3 &_center, const Float &_radius, const Float &_density)
-			: Collider(_center, Quat::identity, _density)
+		static UInt8 shapeId() { return ShapeId::Sphere; }
+
+		static Bounds bounds(const Collider &collider)
 		{
-			radius = _radius;
+			return Bounds(collider.pointToWorld(Vec3::zero), Vec3(collider.shape.radius));
 		}
 
-		inline virtual Bounds bounds() const
+		static Float volume(const Collider &collider) { return Mass::sphereVolume(collider.shape.radius); }
+
+		static bool raycast(const Collider &collider, const Ray &ray, const Float &maxDistance, Vec3 &outPoint, Vec3 &outNormal, Float &outDistance)
 		{
-			return Bounds(pointToWorld(Vec3::zero), Vec3(radius));
+			const Vec3 centerT = collider.pointToWorld(Vec3::zero);
+			return GeomUtil::raycastSphere(centerT, collider.shape.radius, ray.origin, ray.normal(), maxDistance, outPoint, outNormal, outDistance);
 		}
 
-		inline virtual bool raycast(const Ray &ray, const Float &maxDistance, Vec3 &outPoint, Vec3 &outNormal, Float &outDistance) const override
+		static Vec3 localSupport(const Collider &collider, const Vec3 &axis)
 		{
-			const Vec3 centerT = pointToWorld(Vec3::zero);
-			return GeomUtil::raycastSphere(centerT, radius, ray.origin, ray.normal(), maxDistance, outPoint, outNormal, outDistance);
+			return axis * collider.shape.radius;
 		}
-
-		inline virtual Vec3 localSupport(const Vec3 &axis) const override
-		{
-			return axis * radius;
-		}
-
-		inline virtual Float volume() const override { return Mass::sphereVolume(radius); }
-
-		inline virtual ColliderShape shape() const override { return ColliderShape::Sphere; }
 	};
 
 	

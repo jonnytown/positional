@@ -5,44 +5,39 @@
 #ifndef CAPSULE_COLLIDER_H
 #define CAPSULE_COLLIDER_H
 
-#include "ACollider.h"
-#include "SphereCollider.h"
+#include "ShapeId.h"
 #include "mass/Volume.h"
 
-namespace Positional
+namespace Positional::Collision
 {
-	class CapsuleCollider : public Collider
+	struct CapsuleCollider final
 	{
-	public:
-		CapsuleCollider(const Vec3 &_center, const Quat &_rotation, const Float &_radius, const Float &_length, const UInt8 &_axis, const Float &_density)
-			: Collider(_center, _rotation, _density)
-		{
-			radius = _radius;
-			length = _length;
-		}
+		static UInt8 shapeId() { return ShapeId::Capsule; }
 
-		inline virtual Bounds bounds() const
+		static Bounds bounds(const Collider &collider)
 		{
-			const Float l_2 = length * 0.5;
-			const Vec3 c0 = pointToWorld(Vec3(0, -l_2, 0));
-			const Vec3 c1 = pointToWorld(Vec3(0, l_2, 0));
+			const Float l_2 = collider.shape.length * 0.5;
+			const Vec3 c0 = collider.pointToWorld(Vec3(0, -l_2, 0));
+			const Vec3 c1 = collider.pointToWorld(Vec3(0, l_2, 0));
 
-			Bounds bounds = Bounds(c0, Vec3(radius));
-			bounds.merge(Bounds(c1, Vec3(radius)));
+			Bounds bounds = Bounds(c0, Vec3(collider.shape.radius));
+			bounds.merge(Bounds(c1, Vec3(collider.shape.radius)));
 			return bounds;
 		}
 
-		inline virtual bool raycast(const Ray &ray, const Float &maxDistance, Vec3 &outPoint, Vec3 &outNormal, Float &outDistance) const override
+		static Float volume(const Collider &collider) { return Mass::capsuleVolume(collider.shape.radius, collider.shape.length); }
+
+		static bool raycast(const Collider &collider, const Ray &ray, const Float &maxDistance, Vec3 &outPoint, Vec3 &outNormal, Float &outDistance)
 		{
-			const Float l_2 = length * 0.5;
-			const Vec3 c0 = pointToWorld(Vec3(0, -l_2, 0));
-			const Vec3 c1 = pointToWorld(Vec3(0, l_2, 0));
-			return GeomUtil::raycastCapsule(c0, c1, length, radius, ray.origin, ray.normal(), maxDistance, outPoint, outNormal, outDistance);
+			const Float l_2 = collider.shape.length * 0.5;
+			const Vec3 c0 = collider.pointToWorld(Vec3(0, -l_2, 0));
+			const Vec3 c1 = collider.pointToWorld(Vec3(0, l_2, 0));
+			return GeomUtil::raycastCapsule(c0, c1, collider.shape.length, collider.shape.radius, ray.origin, ray.normal(), maxDistance, outPoint, outNormal, outDistance);
 		}
 
-		inline virtual Vec3 localSupport(const Vec3 &axis) const override
+		static Vec3 localSupport(const Collider &collider, const Vec3 &axis)
 		{
-			const Float l_2 = length * 0.5;
+			const Float l_2 = collider.shape.length * 0.5;
 			const Vec3 c[2] = {Vec3(0, -l_2, 0), Vec3(0, l_2, 0)};
 
 			const Float dot0 = axis.dot(c[0]);
@@ -50,15 +45,13 @@ namespace Positional
 			
 			if (Math::approx(dot0, dot1))
 			{
-				return axis * radius;
+				return axis * collider.shape.radius;
 			}
 
-			return c[dot1 > dot0] + axis * radius;
+			return c[dot1 > dot0] + axis * collider.shape.radius;
 		}
-
-		inline virtual Float volume() const override { Mass::capsuleVolume(radius, length); }
-
-		inline virtual ColliderShape shape() const override { return ColliderShape::Capsule; }
+	private:
+		CapsuleCollider() {}
 	};
 }
 #endif // CAPSULE_COLLIDER_H

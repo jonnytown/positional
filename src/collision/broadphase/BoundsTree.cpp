@@ -48,8 +48,8 @@ namespace Positional::Collision
 		UInt32 ancestorHandle = node.parent;
 		while (ancestorHandle != NOT_FOUND)
 		{
-			Node &ancestor = m_nodes[ancestorHandle];
-			ancestor.mask = m_nodes[ancestor.children[0]].mask | m_nodes[ancestor.children[0]].mask;
+			Node &ancestor = m_nodes.at(ancestorHandle);
+			ancestor.mask = m_nodes.at(ancestor.children[0]).mask | m_nodes.at(ancestor.children[0]).mask;
 			ancestorHandle = ancestor.parent;
 		}
 	}
@@ -78,16 +78,20 @@ namespace Positional::Collision
 
 			const Node &node = m_nodes.at(handle);
 			Vec3 point, normal;
-			if ((mask & node.mask) != 0 && node.bounds.intersects(ray, maxDistance))
+			Float distance;
+			if ((mask & node.mask) != 0 && node.bounds.intersects(ray, distance))
 			{
-				if (node.isLeaf())
+				if (maxDistance <= 0 || distance <= maxDistance)
 				{
-					resultsCallback(handle);
-				}
-				else
-				{
-					stack.push_back(node.children[1]);
-					stack.push_back(node.children[0]);
+					if (node.isLeaf())
+					{
+						resultsCallback(handle);
+					}
+					else
+					{
+						stack.push_back(node.children[1]);
+						stack.push_back(node.children[0]);
+					}
 				}
 			}
 		}
@@ -174,7 +178,7 @@ namespace Positional::Collision
 	void
 	BoundsTree::add(const Bounds &bounds, const UInt32 &mask, const UInt32 &handle)
 	{
-		UInt32 parentHandle, oldParentHandle = NOT_FOUND;
+		UInt32 parentHandle = NOT_FOUND, oldParentHandle = NOT_FOUND;
 
 		if (m_nodes.size() == 0)
 		{
@@ -187,13 +191,13 @@ namespace Positional::Collision
 		// find best sibling
 		UInt32 sibHandle = findBestSibling(bounds);
 		assert(sibHandle != NOT_FOUND);
-		Node &sibling = m_nodes[sibHandle];
+		Node &sibling = m_nodes.at(sibHandle);
 
 		// create new parent
 		oldParentHandle = sibling.parent;
 		parentHandle = nextHandle();
 		Node parent(oldParentHandle);
-		m_nodes[parentHandle] = parent;
+		
 
 		if (oldParentHandle == NOT_FOUND)
 		{
@@ -203,7 +207,7 @@ namespace Positional::Collision
 		else
 		{
 			// sibling was not root
-			Node &oldParent = m_nodes[oldParentHandle];
+			Node &oldParent = m_nodes.at(oldParentHandle);
 			UInt32 childIdx = oldParent.children[1] == sibHandle;
 			oldParent.children[childIdx] = parentHandle;
 		}
@@ -213,9 +217,10 @@ namespace Positional::Collision
 		sibling.parent = parentHandle;
 
 		Node node(bounds, mask, parentHandle);
+		m_nodes[parentHandle] = parent;
 		m_nodes[handle] = node;
 
-		refit(parentHandle);
+		refit(handle);
 	}
 
 	void BoundsTree::remove(const UInt32 &handle, const bool &refitAncestors)
@@ -225,25 +230,46 @@ namespace Positional::Collision
 
 		if (node.parent != NOT_FOUND)
 		{
-			const Node &parent = m_nodes[node.parent];
+			const Node &parent = m_nodes.at(node.parent);
 
 			UInt32 childIdx = parent.children[1] == handle;
 			UInt32 sibHandle = parent.children[1 - childIdx];
-			Node &sibling = m_nodes[sibHandle];
+			Node &sibling = m_nodes.at(sibHandle);
 
 			sibling.parent = parent.parent;
-
-			if (refitAncestors)
+			if (sibling.parent == NOT_FOUND)
 			{
-				refit(sibling.parent);
+				m_root = sibHandle;
+			}
+			else
+			{
+				Node &newParent = m_nodes.at(sibling.parent);
+				UInt32 newSibIdx = newParent.children[1] == node.parent;
+				newParent.children[newSibIdx] = sibHandle;
+
+				if (refitAncestors)
+				{
+					refit(sibHandle);
+				}
+			}
+
+			m_nodes.erase(node.parent);
+
+			if (m_root == handle)
+			{
+				m_root = NOT_FOUND;
 			}
 		}
 
-		if (node.parent != NOT_FOUND)
-		{
-			m_nodes.erase(node.parent);
-		}
 		m_nodes.erase(handle);
+
+		for (const auto& [key, value] : m_nodes)
+		{
+			assert(key != handle);
+			assert(value.children[0] != handle);
+			assert(value.children[1] != handle);
+			assert(m_root != handle);
+		}
 	}
 
 	/*
@@ -257,7 +283,10 @@ namespace Positional::Collision
 		Float bestCost = FLOAT_MAX;
 		UInt32 bestHandle = NOT_FOUND;
 
+		const Float sa = bounds.surfaceArea();
+
 		deque<tuple<UInt32, Float>> queue;
+		// node, inhereted
 		queue.push_front(make_tuple(m_root, 0));
 
 		while (queue.size() > 0)
@@ -265,22 +294,26 @@ namespace Positional::Collision
 			const auto &[handle, inheritedCost] = queue.back();
 			queue.pop_back();
 
-			const Node &node = m_nodes.at(handle);
-			const Float directCost = node.bounds.merged(bounds).surfaceArea();
-
-			const Float cost = directCost + inheritedCost;
-			if (cost < bestCost)
+			if (sa + inheritedCost < bestCost) // low bounds test
 			{
-				bestCost = cost;
-				if (node.isLeaf())
+				const Node& node = m_nodes.at(handle);
+				const Float directCost = node.bounds.merged(bounds).surfaceArea();
+
+				const Float cost = directCost + inheritedCost;
+				if (cost < bestCost)
 				{
-					bestHandle = handle;
-				}
-				else
-				{
-					const Float deltaCost = directCost - node.bounds.surfaceArea();
-					queue.push_front(make_tuple(node.children[0], inheritedCost + deltaCost));
-					queue.push_front(make_tuple(node.children[1], inheritedCost + deltaCost));
+					if (node.isLeaf())
+					{
+						bestCost = cost;
+						bestHandle = handle;
+					}
+					else
+					{
+						const Float deltaCost = directCost - node.bounds.surfaceArea();
+						const Float nextInherited = inheritedCost + deltaCost;
+						queue.push_back(make_tuple(node.children[0], nextInherited));
+						queue.push_back(make_tuple(node.children[1], nextInherited));
+					}
 				}
 			}
 		}
@@ -290,52 +323,57 @@ namespace Positional::Collision
 
 	void BoundsTree::refit(const UInt32 &startHandle)
 	{
-		const Node &startNode = m_nodes[startHandle];
+		const Node &startNode = m_nodes.at(startHandle);
 
 		UInt32 handle = startHandle;
-		Bounds nextBounds = m_nodes.at(startNode.children[0]).bounds.merged(m_nodes.at(startNode.children[1]).bounds);
+		Bounds nextBounds = startNode.isLeaf() ? Bounds(Vec3::zero, Vec3::zero) : m_nodes.at(startNode.children[0]).bounds.merged(m_nodes.at(startNode.children[1]).bounds);
 
 		while (handle != NOT_FOUND)
 		{
-			Node &node = m_nodes[handle];
+			Node& node = m_nodes.at(handle);
 
-			node.bounds = nextBounds;
-			node.mask = m_nodes[node.children[0]].mask | m_nodes[node.children[1]].mask;
+			if (!node.isLeaf())
+			{
+				node.bounds = nextBounds;
+				node.mask = m_nodes.at(node.children[0]).mask | m_nodes.at(node.children[1]).mask;
+			}
 
 			const UInt32 parentHandle = node.parent;
-
-			// try to rotate
-			if (parentHandle != NOT_FOUND && m_nodes[parentHandle].parent != NOT_FOUND)
+			if (parentHandle != NOT_FOUND)
 			{
 				Node &parent = m_nodes.at(parentHandle);
-				Node &grandma = m_nodes.at(parent.parent);
 
 				const UInt32 sibIdx = 1 - (parent.children[1] == handle);
 				Node &sibling = m_nodes.at(parent.children[sibIdx]);
-
-				const UInt32 auntIdx = 1 - (grandma.children[1] == parentHandle);
-				const UInt32 auntHandle = grandma.children[auntIdx];
-				Node &aunt = m_nodes.at(auntHandle);
-
 				nextBounds = node.bounds.merged(sibling.bounds);
-				const Float currentSA = nextBounds.surfaceArea();
 
-				const Bounds rotatedBounds = aunt.bounds.merged(sibling.bounds);
-				const Float rotatedSA = rotatedBounds.surfaceArea();
-
-				// rotate
-				if (rotatedSA < currentSA)
+				// try to rotate
+				if (m_nodes.at(parentHandle).parent != NOT_FOUND)
 				{
-					grandma.children[auntIdx] = handle;
-					node.parent = parent.parent;
+					Node& grandma = m_nodes.at(parent.parent);
 
-					parent.children[1-sibIdx] = auntHandle;
-					aunt.parent = parentHandle;
+					const UInt32 auntIdx = 1 - (grandma.children[1] == parentHandle);
+					const UInt32 auntHandle = grandma.children[auntIdx];
+					Node& aunt = m_nodes.at(auntHandle);
 
-					nextBounds = rotatedBounds;
+					const Float currentSA = nextBounds.surfaceArea();
+
+					const Bounds rotatedBounds = aunt.bounds.merged(sibling.bounds);
+					const Float rotatedSA = rotatedBounds.surfaceArea();
+
+					// rotate
+					if (rotatedSA < currentSA)
+					{
+						grandma.children[auntIdx] = handle;
+						node.parent = parent.parent;
+
+						parent.children[1 - sibIdx] = auntHandle;
+						aunt.parent = parentHandle;
+
+						nextBounds = rotatedBounds;
+					}
 				}
 			}
-
 			handle = parentHandle;
 		}
 	}

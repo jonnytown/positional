@@ -18,12 +18,13 @@ namespace Positional
 	private:
 		Vec3 m_extents;
 	public:
-		Bounds() : center(Vec3::zero), m_extents(Vec3::zero) {}
-		Bounds(const Vec3 &_center, const Vec3 &_extents) : center(_center) {
-			m_extents.x = Math::abs(_extents.x);
-			m_extents.y = Math::abs(_extents.y);
-			m_extents.z = Math::abs(_extents.z);
-		}
+		Bounds()
+			: center(Vec3::zero),
+			  m_extents(Vec3::zero) {}
+
+		Bounds(const Vec3 &_center, const Vec3 &_extents)
+			: center(_center),
+			  m_extents(Vec3(Math::abs(_extents.x), Math::abs(_extents.y), Math::abs(_extents.z))) {}
 
 		Bounds &operator=(const Bounds &rhs)
 		{
@@ -129,7 +130,10 @@ namespace Positional
 			return exclusive ? intersectsExclusive(other) : intersects(other);
 		}
 
-		bool intersects(const Ray &ray) const
+		/*
+		 * Negative distance means ray starts inside bounds
+		 */
+		bool intersects(const Ray &ray, Float &outDistance) const
 		{
 			Vec3 invDir = ray.invNormal();
 
@@ -142,25 +146,9 @@ namespace Positional
 
 			Float tmin = Math::max(Math::max(Math::min(t1, t2), Math::min(t3, t4)), Math::min(t5, t6));
 			Float tmax = Math::min(Math::min(Math::max(t1, t2), Math::max(t3, t4)), Math::max(t5, t6));
-
-			return tmin >= 0 && tmax >= tmin;
-		}
-
-		bool intersects(const Ray &ray, const Float &maxDistance) const
-		{
-			Vec3 invDir = ray.invNormal();
-
-			Float t1 = ((center.x - m_extents.x) - ray.origin.x) * invDir.x;
-			Float t2 = ((center.x + m_extents.x) - ray.origin.x) * invDir.x;
-			Float t3 = ((center.y - m_extents.y) - ray.origin.y) * invDir.y;
-			Float t4 = ((center.y + m_extents.y) - ray.origin.y) * invDir.y;
-			Float t5 = ((center.z - m_extents.z) - ray.origin.z) * invDir.z;
-			Float t6 = ((center.z + m_extents.z) - ray.origin.z) * invDir.z;
-
-			Float tmin = Math::max(Math::max(Math::min(t1, t2), Math::min(t3, t4)), Math::min(t5, t6));
-			Float tmax = Math::min(Math::min(Math::max(t1, t2), Math::max(t3, t4)), Math::max(t5, t6));
-
-			return tmin >= 0 && tmax >= tmin && (maxDistance <= 0 || tmin <= maxDistance);
+			
+			outDistance = tmin;
+			return tmax >= tmin;
 		}
 
 		Bounds &merge(const Vec3 &point)

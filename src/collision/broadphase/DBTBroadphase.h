@@ -19,14 +19,16 @@ namespace Positional::Collision
 		class Node
 		{
 		public:
-			optional<Collider*> collider;
+			Store<Collider>::Ptr collider;
 			Bounds treeBounds;
 
-			Node() {}
-			Node(Collider *_collider, const Bounds &_treeBounds) : treeBounds(_treeBounds)
-			{
-				collider.emplace(_collider);
-			}
+			Node() :
+				collider(Store<Collider>::Ptr()),
+				treeBounds(Bounds(Vec3::zero, Vec3::zero)) {}
+
+			Node(Store<Collider>::Ptr _collider, const Bounds &_treeBounds) :
+				collider(_collider),
+				treeBounds(_treeBounds) {}
 		};
 
 		BoundsTree m_dynamicTree;
@@ -35,20 +37,28 @@ namespace Positional::Collision
 		unordered_map<UInt32, Node> m_staticNodes;
 		Float m_padFactor;
 
+		UInt32 Find(const unordered_map<UInt32, Node> &nodeMap, const Store<Collider>::Ptr &collider) const;
+
 	public:
 		DBTBroadphase(const Float &padFactor = 2.0) : m_padFactor(padFactor) {}
-		~DBTBroadphase(){}
+		~DBTBroadphase() {}
 
 #pragma region ABroadphase Interface
-		virtual UInt32 add(Collider *collider) override;
-		virtual UInt32 addStatic(Collider *collider) override;
-		virtual void remove(const UInt32 &handle) override;
-		virtual void removeStatic(const UInt32 &handle) override;
+		virtual void add(const Store<Collider>::Ptr &collider) override;
+		virtual void addStatic(const Store<Collider>::Ptr &collider) override;
+		virtual void remove(const Store<Collider>::Ptr &collider) override;
+		virtual void removeStatic(const Store<Collider>::Ptr &collider) override;
 		virtual void update() override;
 
-		virtual void raycast(const Ray &ray, const Float &maxDistance, const UInt32 &mask, vector<Collider *> &results) const override;
-		virtual void generateOverlapPairs(vector<pair<Collider *, Collider *>> &results) const override;
+		virtual void raycast(const Ray &ray, const Float &maxDistance, const UInt32 &mask, vector<Store<Collider>::Ptr> &results) const override;
+		virtual void generateOverlapPairs(vector<pair<Store<Collider>::Ptr, Store<Collider>::Ptr>> &results) const override;
 #pragma endregion ABroadphase Interface
+
+		void forEachNode(const function<void(Bounds)> &callback)
+		{
+			m_dynamicTree.forEachNode(callback);
+			m_staticTree.forEachNode(callback);
+		}
 	};
 }
 

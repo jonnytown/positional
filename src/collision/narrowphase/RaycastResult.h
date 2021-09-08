@@ -4,17 +4,22 @@
 #ifndef RAYCAST_RESULT_H
 #define RAYCAST_RESULT_H
 
-#include "collision/collider/ACollider.h"
+#include "collision/collider/Collider.h"
 
-namespace Positional::Collision
+namespace Positional
 {
-	class RaycastResult
+	struct RaycastResult
 	{
-	public:
-		Collider *collider;
+		Store<Collider>::Ptr collider;
 		Vec3 point;
 		Vec3 normal;
 		Float distance;
+
+		RaycastResult(const Store<Collider>::Ptr &_collider, const Vec3 &_point, const Vec3 &_normal, const Float &_distance)
+			: collider(_collider),
+			  point(_point),
+			  normal(_normal),
+			  distance(_distance) {}
 	};
 }
 #endif // RAYCAST_RESULT_H

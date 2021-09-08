@@ -4,7 +4,7 @@
 #ifndef COLLISION_RESULT_H
 #define COLLISIONT_RESULT_H
 
-#include "collision/collider/ACollider.h"
+#include "collision/collider/Collider.h"
 #include "ContactPoint.h"
 #include <vector>
 
