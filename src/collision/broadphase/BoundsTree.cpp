@@ -262,14 +262,6 @@ namespace Positional::Collision
 		}
 
 		m_nodes.erase(handle);
-
-		for (const auto& [key, value] : m_nodes)
-		{
-			assert(key != handle);
-			assert(value.children[0] != handle);
-			assert(value.children[1] != handle);
-			assert(m_root != handle);
-		}
 	}
 
 	/*

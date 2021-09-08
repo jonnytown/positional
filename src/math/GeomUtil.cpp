@@ -142,22 +142,25 @@ namespace Positional
 		const Float toCenterSq = toCenter.lengthSq();
 
 		// origin starts inside sphere
-		if (toCenterSq < r2)
+		if (toCenterSq >= r2)
 		{
-			return false;
-		}
-
-		const Vec3 projPoint = r0 + toCenter.project(n);
-		const Float opSq = center.distanceSq(projPoint);
-		if (opSq <= r2)
-		{
-			const Float t = Math::approx(opSq, 0) ? Math::sqrt(toCenterSq) - radius : r0.distance(projPoint) - Math::sqrt(r2 - opSq);
-			if (d <= 0 || t <= d)
+			// will project in front of origin
+			const Float uv = toCenter.dot(n);
+			if (uv > 0)
 			{
-				outPoint = r0 + n * t;
-				outNormal = (outPoint - center).normalize();
-				outDistance = t;
-				return true;
+				const Vec3 projPoint = r0 + n*uv;
+				const Float opSq = center.distanceSq(projPoint);
+				if (opSq <= r2)
+				{
+					const Float t = Math::approx(opSq, 0) ? Math::sqrt(toCenterSq) - radius : uv - Math::sqrt(r2 - opSq);
+					if (d <= 0 || t <= d)
+					{
+						outPoint = r0 + n * t;
+						outNormal = (outPoint - center).normalize();
+						outDistance = t;
+						return true;
+					}
+				}
 			}
 		}
 

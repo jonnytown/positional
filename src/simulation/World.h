@@ -54,10 +54,9 @@ namespace Positional
 		}
 
 		template <typename T>
-		Store<Body>::Ptr createBody()
+		Store<Body>::Ptr createBody(const Vec3 &position, const Quat &rotation)
 		{
-			auto body = m_bodies.store(Body::create<T>(this));
-			return body;
+			return m_bodies.store(Body::create<T>(this, position, rotation));
 		}
 
 		void destroyBody(Store<Body>::Ptr ptr)

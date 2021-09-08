@@ -40,7 +40,7 @@ namespace Positional::Collision
 		UInt32 Find(const unordered_map<UInt32, Node> &nodeMap, const Store<Collider>::Ptr &collider) const;
 
 	public:
-		DBTBroadphase(const Float &padFactor = 2.0) : m_padFactor(padFactor) {}
+		DBTBroadphase(const Float &padFactor = 2.0) : m_padFactor(padFactor), m_dynamicTree(BoundsTree()), m_staticTree(BoundsTree()) {}
 		~DBTBroadphase() {}
 
 #pragma region ABroadphase Interface

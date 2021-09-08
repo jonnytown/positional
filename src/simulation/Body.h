@@ -26,7 +26,11 @@ namespace Positional
 		function<Vec3(const Body &, const Vec3 &)> m_pointToLocal;
 		function<Vec3(const Body &, const Vec3 &)> m_vectorToLocal;
 
-		Body(World *world)
+		Body(World* world, const Vec3& _position, const Quat& _rotation)
+			: position(_position),
+			velocity(Vec3::zero),
+			rotation(_rotation),
+			angularVelocity(Vec3::zero)
 		{
 			m_world.emplace(world);
 		}
@@ -44,12 +48,13 @@ namespace Positional
 		Vec3 vectorToWorld(const Vec3 &vector) const { return m_vectorToWorld(*this, vector); }
 		Vec3 vectorToLocal(const Vec3 &vector) const { return m_vectorToLocal(*this, vector); }
 
-		void updateMassProperties();
+		// TODO
+		//void updateMassProperties();
 
 		template <typename T>
-		static Body create(World *world)
+		static Body create(World *world, const Vec3 &position, const Quat &rotation)
 		{
-			Body body = Body(world);
+			Body body = Body(world, position, rotation);
 			body.m_pointToWorld = T::pointToWorld;
 			body.m_vectorToWorld = T::vectorToWorld;
 			body.m_pointToLocal = T::pointToLocal;
