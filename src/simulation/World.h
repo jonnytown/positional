@@ -9,7 +9,9 @@
 #include <unordered_set>
 #include "data/Store.h"
 #include "collision/broadphase/DBTBroadphase.h"
+#include "collision/narrowphase/Penetration.h"
 #include "collision/narrowphase/RaycastResult.h"
+#include "collision/narrowphase/CollisionResult.h"
 
 using namespace std;
 
@@ -144,6 +146,11 @@ namespace Positional
 			}
 		}
 
+		void updateBroadphase()
+		{
+			m_broadphase->update();
+		}
+
 		void forEachBoundsNode(function <void(const Bounds &bounds)> callback)
 		{
 			try
@@ -154,12 +161,58 @@ namespace Positional
 					dbt->forEachNode(callback);
 				}
 			}
-			catch (exception exc) {}
+			catch (exception exc)
+			{
+			}
 		}
 
-		void updateBroadphase()
+		void forEachBroadPair(function<void(const pair<Store<Collider>::Ptr, Store<Collider>::Ptr>&)> callback)
 		{
-			m_broadphase->update();
+			try
+			{
+				const auto dbt = static_cast<Collision::DBTBroadphase*>(m_broadphase);
+				if (dbt)
+				{
+					vector<pair<Store<Collider>::Ptr, Store<Collider>::Ptr>> broadResults;
+					dbt->generateOverlapPairs(broadResults);
+
+					for (UInt32 i = 0, count = broadResults.size(); i < count; ++i)
+					{
+						callback(broadResults[i]);
+					}
+				}
+			}
+			catch (exception exc)
+			{
+			}
+		}
+
+		void forEachCollision(function<void(const CollisionResult &)> callback)
+		{
+			try
+			{
+				const auto dbt = static_cast<Collision::DBTBroadphase *>(m_broadphase);
+				if (dbt)
+				{
+					vector<pair<Store<Collider>::Ptr, Store<Collider>::Ptr>> broadResults;
+					dbt->generateOverlapPairs(broadResults);
+
+					for(UInt32 i = 0, count = broadResults.size(); i < count; ++i)
+					{
+						Vec3 normal;
+						Float depth;
+						if (Collision::Penetration::compute(*broadResults[i].first.get(), *broadResults[i].second.get(), depth, normal))
+						{
+							auto result = CollisionResult(broadResults[i].first, broadResults[i].second);
+							result.contacts.emplace_back(Vec3::zero, normal, depth, Vec3::zero, Vec3::zero);
+							callback(result);
+						}
+					}
+				}
+			}
+			catch (exception exc)
+			{
+			}
 		}
 	};
 }

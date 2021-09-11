@@ -4,7 +4,7 @@
 #include "collision/collider/SphereCollider.h"
 #include "collision/collider/CapsuleCollider.h"
 
-namespace Positional
+namespace Positional::Collision
 {
 	bool Penetration::compute(const Collider &a, const Collider &b, Float &outDepth, Vec3 &outNorm)
 	{
@@ -24,7 +24,7 @@ namespace Positional
 					   ? sphereCapsule(a, b, false, outDepth, outNorm)
 					   : sphereCapsule(b, a, true, outDepth, outNorm);
 		default:
-			return GJK_EPA(a, b, outDepth, outNorm);
+			return gjk_epa(a, b, outDepth, outNorm);
 		}
 	}
 
@@ -46,12 +46,12 @@ namespace Positional
 	bool Penetration::capsuleCapsule(const Collider &a, const Collider &b, Float &outDepth, Vec3 &outNorm)
 	{
 		const Float al_2 = a.shape.length / 2;
-		const Vec3 a0 = a.pointToWorld(Vec3(-al_2, 0, 0));
-		const Vec3 a1 = a.pointToWorld(Vec3(al_2, 0, 0));
+		const Vec3 a0 = a.pointToWorld(Vec3(0, -al_2, 0));
+		const Vec3 a1 = a.pointToWorld(Vec3(0, al_2, 0));
 
 		const Float bl_2 = b.shape.length / 2;
-		const Vec3 b0 = b.pointToWorld(Vec3(-bl_2, 0, 0));
-		const Vec3 b1 = b.pointToWorld(Vec3(bl_2, 0, 0));
+		const Vec3 b0 = b.pointToWorld(Vec3(0, -bl_2, 0));
+		const Vec3 b1 = b.pointToWorld(Vec3(0, bl_2, 0));
 
 		Vec3 nearA, nearB;
 		GeomUtil::nearestOnSegments(a0, a1, b0, b1, nearA, nearB);
@@ -75,8 +75,8 @@ namespace Positional
 		const Vec3 c = sphere.pointToWorld(Vec3::zero);
 
 		const Float al_2 = capsule.shape.length / 2;
-		const Vec3 a0 = capsule.pointToWorld(Vec3(-al_2, 0, 0));
-		const Vec3 a1 = capsule.pointToWorld(Vec3(al_2, 0, 0));
+		const Vec3 a0 = capsule.pointToWorld(Vec3(0, -al_2, 0));
+		const Vec3 a1 = capsule.pointToWorld(Vec3(0, al_2, 0));
 
 		const Vec3 a = GeomUtil::nearestOnSegment(c, a0, a1);
 		const Vec3 toA = a - c;
@@ -149,9 +149,53 @@ namespace Positional
 		}
 		return false;
 	}
-
-	bool Penetration::GJK_EPA(const Collider &a, const Collider &b, Float &outDepth, Vec3 &outNormal)
+	bool Penetration::gjk_epa(const Collider &a, const Collider &b, Float &outDepth, Vec3 &outNormal)
 	{
+		CSO cso;
+		if (gjk(a, b, cso))
+		{
+			return true;
+		}
 		return false;
 	}
+
+	bool Penetration::gjk(const Collider& a, const Collider& b, CSO& outCSO)
+	{
+		const UInt8 MAX_ITERS = 32;
+
+		// find initial support vertext using arbitrary first axis
+		Vec3 support, supportA, supportB;
+		CSO::support(a, b, Vec3::pos_x, support, supportA, supportB);
+		
+
+		for (UInt8 i = 0; i < MAX_ITERS; ++i)
+		{
+			outCSO.add(support, supportA, supportB);
+
+			UInt8 nearDim, nearIndex;
+			const Vec3 nearest = outCSO.nearest(nearDim, nearIndex);
+
+			// nearest is origin: we have a collision
+			if (nearest.lengthSq() < 0.0000001)
+			{
+				return true;
+			}
+
+			outCSO.reduce(nearDim, nearIndex);
+
+			// negated nearest is vector to origin
+			const Vec3 search = -nearest.normalized();
+			CSO::support(a, b, search, support, supportA, supportB);
+
+			const Float supportDot = search.dot(support);
+			const Float nearestDot = search.dot(nearest);
+
+			if (supportDot <= nearestDot)
+			{
+				return false;
+			}
+		}
+		return false;
+	}
+
 } // namespace Positional

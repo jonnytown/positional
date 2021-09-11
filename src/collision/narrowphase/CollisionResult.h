@@ -8,14 +8,17 @@
 #include "ContactPoint.h"
 #include <vector>
 
-namespace Positional::Collision
+namespace Positional
 {
-	class CollisionResult
+	struct CollisionResult
 	{
-	public:
-		Collider *first;
-		Collider *second;
+		Store<Collider>::Ptr first;
+		Store<Collider>::Ptr second;
 		std::vector<ContactPoint> contacts;
+
+		CollisionResult(const Store<Collider>::Ptr &_first, const Store<Collider>::Ptr &_second)
+			: first(_first),
+			  second(_second) {}
 	};
 }
 #endif // COLLISION_RESULT_H

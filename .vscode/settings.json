@@ -35,7 +35,11 @@
 		"optional": "cpp",
 		"algorithm": "cpp",
 		"memory": "cpp",
-		"functional": "cpp"
+		"functional": "cpp",
+		"atomic": "cpp",
+		"compare": "cpp",
+		"concepts": "cpp",
+		"typeinfo": "cpp"
 	},
 	"C_Cpp.default.includePath": ["${workspaceRoot}/src"]
 }

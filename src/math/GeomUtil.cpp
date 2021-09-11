@@ -3,12 +3,116 @@
 
 namespace Positional
 {
+
+	Vec3 GeomUtil::nearestOnTetraderon(const Vec3 &point, const Vec3 &a, const Vec3 &b, const Vec3 &c, const Vec3 &d)
+	{
+		const Vec3 AB = b - a;
+		const Vec3 AC = c - a;
+		const Vec3 AD = d - a;
+		const Vec3 normABC = AB.cross(AC);
+
+		const Vec3 AP = point - a;
+
+		const Float vol = 0.1666666666666666666667 * AD.dot(normABC);
+		const Float v0 = 0.1666666666666666666667 * AP.dot(normABC);
+
+		const Vec3 normADB = AB.cross(AD);
+		const Float v1 = 0.1666666666666666666667 * AP.dot(normADB) * Math::sign(AC.dot(normADB));
+
+		const Vec3 normBDC = AC.cross(AD);
+		const Float v2 = 0.1666666666666666666667 * AP.dot(normBDC) * Math::sign(AB.dot(normBDC));
+
+		const Float s = v0/vol;
+		const Float t = v1/vol;
+		const Float u = v2/vol;
+
+		if (s <= 0 && t <=0 && u <= 0 && s + t + u <= 1)
+		{
+			return point;
+		}
+
+		const Vec3 near1 = nearestOnTriangle(point, a, b, c);
+		const Vec3 near2 = nearestOnTriangle(point, a, d, b);
+		const Vec3 near3 = nearestOnTriangle(point, b, d, c);
+		const Vec3 near4 = nearestOnTriangle(point, a, c, d);
+
+		const Float dSq1 = point.distanceSq(near1);
+		const Float dSq2 = point.distanceSq(near2);
+		const Float dSq3 = point.distanceSq(near3);
+		const Float dSq4 = point.distanceSq(near4);
+
+		if (dSq1 <= dSq2 && dSq1 <= dSq3 && dSq1 <= dSq4)
+		{
+			return near1;
+		}
+
+		if (dSq2 < dSq1 && dSq2 <= dSq3 && dSq2 <= dSq4)
+		{
+			return near2;
+		}
+
+		if (dSq3 < dSq1 && dSq3 < dSq2 && dSq3 <= dSq4)
+		{
+			return near3;
+		}
+
+		return near4;
+	}
+
+	Vec3 GeomUtil::nearestOnTriangle(const Vec3 &point, const Vec3 &a, const Vec3 &b, const Vec3 &c)
+	{
+		const Vec3 u = b - a;
+		const Vec3 v = c - a;
+		const Vec3 n = u.cross(v);
+
+		// nn is area of the triangle * 2
+		const Float nn = n.lengthSq();
+
+		// project on plane
+		const Vec3 w = point - a;
+		const Vec3 p = w - n * (w.dot(n)/nn);
+
+		// calculate signed areas squared (area of the parellelagram formed by two vectors)
+		const Vec3 uxp = u.cross(p);
+		const Vec3 pxv = p.cross(v);
+		const Float areaU = uxp.lengthSq() * Math::sign(uxp.dot(n));
+		const Float areaV = pxv.lengthSq() * Math::sign(pxv.dot(n));
+
+		const Float s = areaU/nn;
+		const Float t = areaV/nn;
+
+		if (s >= 0 && t >= 0 && Math::sqrt(s) + Math::sqrt(t) <= 1)
+		{
+			return a + p;
+		}
+
+		const Vec3 near1 = nearestOnSegment(point, a, b);
+		const Vec3 near2 = nearestOnSegment(point, b, c);
+		const Vec3 near3 = nearestOnSegment(point, c, a);
+
+		const Float dSq1 = point.distanceSq(near1);
+		const Float dSq2 = point.distanceSq(near2);
+		const Float dSq3 = point.distanceSq(near3);
+
+		if (dSq1 <= dSq2 && dSq1 <= dSq3)
+		{
+			return near1;
+		}
+
+		if (dSq2 < dSq1 && dSq2 <= dSq3)
+		{
+			return near2;
+		}
+
+		return near3;
+	}
+
 	void GeomUtil::nearestOnSegments(const Vec3 &a0, const Vec3 &a1, const Vec3 &b0, const Vec3 &b1, Vec3 &outA, Vec3 &outB)
 	{
-		Vec3 u = a1 - a0;
-		Vec3 v = b1 - b0;
-		Float ul2 = u.lengthSq();
-		Float vl2 = v.lengthSq();
+		const Vec3 u = a1 - a0;
+		const Vec3 v = b1 - b0;
+		const Float ul2 = u.lengthSq();
+		const Float vl2 = v.lengthSq();
 
 		if (ul2 < Math::Epsilon || vl2 < Math::Epsilon)
 		{
@@ -26,15 +130,15 @@ namespace Positional
 			return;
 		}
 
-		Vec3 r = b0 - a0;
+		const Vec3 r = b0 - a0;
 
-		Float ru = r.dot(u);
-		Float rv = r.dot(v);
-		Float uu = u.dot(u);
-		Float uv = u.dot(v);
-		Float vv = v.dot(v);
+		const Float ru = r.dot(u);
+		const Float rv = r.dot(v);
+		const Float uu = u.dot(u);
+		const Float uv = u.dot(v);
+		const Float vv = v.dot(v);
 
-		Float det = uu * vv - uv * uv;
+		const Float det = uu * vv - uv * uv;
 		Float s, t;
 
 		if (det < Math::Epsilon * uu * vv)
@@ -49,8 +153,8 @@ namespace Positional
 			t = Math::clamp((ru * uv - rv * uu) / det, 0, 1);
 		}
 
-		Float S = Math::clamp((t * uv + ru) / uu, 0, 1);
-		Float T = Math::clamp((s * uv - rv) / vv, 0, 1);
+		const Float S = Math::clamp((t * uv + ru) / uu, 0, 1);
+		const Float T = Math::clamp((s * uv - rv) / vv, 0, 1);
 
 		outA = a0 + S * u;
 		outB = b0 + T * v;
@@ -58,8 +162,8 @@ namespace Positional
 
 	void GeomUtil::nearestOnRaySegment(const Vec3 &r0, const Vec3 &n, const Vec3 &c0, const Vec3 &c1, Vec3 &outA, Vec3 &outB)
 	{
-		Vec3 v = c1 - c0;
-		Float vl2 = v.lengthSq();
+		const Vec3 v = c1 - c0;
+		const Float vl2 = v.lengthSq();
 
 		if (vl2 < Math::Epsilon)
 		{
@@ -68,15 +172,15 @@ namespace Positional
 			return;
 		}
 
-		Vec3 r = c0 - r0;
+		const Vec3 r = c0 - r0;
 
-		Float ru = r.dot(n);
-		Float rv = r.dot(v);
-		Float uu = n.dot(n);
-		Float uv = n.dot(v);
-		Float vv = v.dot(v);
+		const Float ru = r.dot(n);
+		const Float rv = r.dot(v);
+		const Float uu = n.dot(n);
+		const Float uv = n.dot(v);
+		const Float vv = v.dot(v);
 
-		Float det = uu * vv - uv * uv;
+		const Float det = uu * vv - uv * uv;
 		Float s, t;
 
 		if (det < 0.000001 * uu * vv)
@@ -99,8 +203,8 @@ namespace Positional
 			t = Math::clamp((ru * uv - rv * uu) / det, 0, 1);
 		}
 
-		Float S = Math::max((t * uv + ru) / uu, 0);
-		Float T = Math::clamp((s * uv - rv) / vv, 0, 1);
+		const Float S = Math::max((t * uv + ru) / uu, 0);
+		const Float T = Math::clamp((s * uv - rv) / vv, 0, 1);
 
 		outA = r0 + S * n;
 		outB = c0 + T * v;
@@ -109,15 +213,15 @@ namespace Positional
 	bool GeomUtil::raycastBox(const Vec3 &extents, const Vec3 &r0, const Vec3 &n, const Vec3 &ni, const Float &d, Vec3 &outPoint, Vec3 &outNormal, Float &outDistance)
 	{
 
-		Float t1 = (-extents.x - r0.x) * ni.x;
-		Float t2 = (extents.x - r0.x) * ni.x;
-		Float t3 = (-extents.y - r0.y) * ni.y;
-		Float t4 = (extents.y - r0.y) * ni.y;
-		Float t5 = (-extents.z - r0.z) * ni.z;
-		Float t6 = (extents.z - r0.z) * ni.z;
+		const Float t1 = (-extents.x - r0.x) * ni.x;
+		const Float t2 = (extents.x - r0.x) * ni.x;
+		const Float t3 = (-extents.y - r0.y) * ni.y;
+		const Float t4 = (extents.y - r0.y) * ni.y;
+		const Float t5 = (-extents.z - r0.z) * ni.z;
+		const Float t6 = (extents.z - r0.z) * ni.z;
 
-		Float tmin = Math::max(Math::max(Math::min(t1, t2), Math::min(t3, t4)), Math::min(t5, t6));
-		Float tmax = Math::min(Math::min(Math::max(t1, t2), Math::max(t3, t4)), Math::max(t5, t6));
+		const Float tmin = Math::max(Math::max(Math::min(t1, t2), Math::min(t3, t4)), Math::min(t5, t6));
+		const Float tmax = Math::min(Math::min(Math::max(t1, t2), Math::max(t3, t4)), Math::max(t5, t6));
 
 		if (tmin >= 0 && tmax >= tmin && (d <= 0 || tmin <= d))
 		{
@@ -169,8 +273,8 @@ namespace Positional
 
 	bool GeomUtil::raycastCylinder(const Vec3 &c0, const Vec3 &c1, const Float &length, const Float &radius, const Vec3 &r0, const Vec3 &n, const Float &d, Vec3 &outPoint, Vec3 &outNormal, Float &outDistance)
 	{
-		Vec3 AB = c1 - c0;
-		Vec3 AO = r0 - c0;
+		const Vec3 AB = c1 - c0;
+		const Vec3 AO = r0 - c0;
 
 		// parallel
 		if (Math::approx(Math::abs(AB.dot(n) / length), 1, 0.000001))
@@ -178,34 +282,34 @@ namespace Positional
 			return false;
 		}
 
-		Vec3 AOxAB = AO.cross(AB);
-		Vec3 VxAB = n.cross(AB);
+		const Vec3 AOxAB = AO.cross(AB);
+		const Vec3 VxAB = n.cross(AB);
 
-		Float ab2 = length * length;
-		Float A = VxAB.dot(VxAB);
-		Float B = 2 * VxAB.dot(AOxAB);
-		Float C = AOxAB.dot(AOxAB) - radius * radius * ab2;
-		Float D = B * B - 4 * A * C;
+		const Float ab2 = length * length;
+		const Float A = VxAB.dot(VxAB);
+		const Float B = 2 * VxAB.dot(AOxAB);
+		const Float C = AOxAB.dot(AOxAB) - radius * radius * ab2;
+		const Float D = B * B - 4 * A * C;
 		if (D < 0)
 		{
 			return false;
 		}
 
-		Float time = (-B - Math::sqrt(D)) / (2 * A);
+		const Float time = (-B - Math::sqrt(D)) / (2 * A);
 		if (time < 0 || (d > 0 && time > d))
 		{
 			return false;
 		}
 
-		Vec3 intersection = r0 + n * time;
-		Float projectionTime = AB.dot(intersection - c0) / ab2;
+		const Vec3 intersection = r0 + n * time;
+		const Float projectionTime = AB.dot(intersection - c0) / ab2;
 
 		if (projectionTime < 0 || projectionTime > 1)
 		{
 			return false;
 		}
 
-		Vec3 projection = c0 + AB * projectionTime;
+		const Vec3 projection = c0 + AB * projectionTime;
 
 		outPoint = intersection;
 		outNormal = (intersection - projection).normalize();
@@ -279,5 +383,46 @@ namespace Positional
 		}
 
 		return raycastCaps(c0, c1, radius, r0, n, d, outPoint, outNormal, outDistance);
+	}
+
+	bool GeomUtil::raycastTriangle(const Vec3 &a, const Vec3 &b, const Vec3 &c, const Vec3 &r0, const Vec3 &rn, const Float &maxDist, Vec3 &outPoint, Vec3 &outNormal, Float &outDistance)
+	{
+		const Vec3 u = b - a;
+		const Vec3 v = c - a;
+		const Vec3 n = u.cross(v);
+
+		const Float nrn = n.dot(rn);
+		if (nrn < 0)
+		{
+			// ray is parallel or in same direction as normal
+			return false;
+		}
+
+		const Float t = (n.dot(r0) + n.dot(a)) / nrn;
+		if (t >= 0 && (maxDist <= 0 || t < maxDist))
+		{
+			const Vec3 p = r0 + rn * t;
+			const Vec3 uxp = u.cross(p);
+			const Vec3 pxv = p.cross(v);
+
+			// calculate signed areas squared (area of the parellelagram formed by two vectors)
+			const Float area = n.lengthSq();
+			const Float areaU = uxp.lengthSq() * Math::sign(uxp.dot(n));
+			const Float areaV = pxv.lengthSq() * Math::sign(pxv.dot(n));
+
+			// squared barycentric coords
+			const Float S = areaU / area;
+			const Float T = areaV / area;
+
+			if (S >= 0 && T >= 0 && Math::sqrt(S) + Math::sqrt(T) <= 1)
+			{
+				outPoint = p;
+				outNormal = n;
+				outDistance = t;
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

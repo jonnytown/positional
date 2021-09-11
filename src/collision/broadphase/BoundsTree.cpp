@@ -79,19 +79,18 @@ namespace Positional::Collision
 			const Node &node = m_nodes.at(handle);
 			Vec3 point, normal;
 			Float distance;
-			if ((mask & node.mask) != 0 && node.bounds.intersects(ray, distance))
+			if ((mask & node.mask) != 0
+				&& node.bounds.intersects(ray, distance)
+				&& (maxDistance <= 0 || distance <= maxDistance))
 			{
-				if (maxDistance <= 0 || distance <= maxDistance)
+				if (node.isLeaf())
 				{
-					if (node.isLeaf())
-					{
-						resultsCallback(handle);
-					}
-					else
-					{
-						stack.push_back(node.children[1]);
-						stack.push_back(node.children[0]);
-					}
+					resultsCallback(handle);
+				}
+				else
+				{
+					stack.push_back(node.children[1]);
+					stack.push_back(node.children[0]);
 				}
 			}
 		}

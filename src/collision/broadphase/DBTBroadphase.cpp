@@ -23,19 +23,21 @@ namespace Positional::Collision
 	void DBTBroadphase::remove(const Store<Collider>::Ptr &ptr)
 	{
 		UInt32 handle = Find(m_dynamicNodes, ptr);
-		assert(handle != NOT_FOUND);
-
-		m_dynamicTree.remove(handle);
-		m_dynamicNodes.erase(handle);
+		if (handle != NOT_FOUND)
+		{
+			m_dynamicTree.remove(handle);
+			m_dynamicNodes.erase(handle);
+		}
 	}
 
 	void DBTBroadphase::removeStatic(const Store<Collider>::Ptr &ptr)
 	{
 		UInt32 handle = Find(m_staticNodes, ptr);
-		assert(handle != NOT_FOUND);
-
-		m_staticTree.remove(handle);
-		m_staticNodes.erase(handle);
+		if (handle != NOT_FOUND)
+		{
+			m_staticTree.remove(handle);
+			m_staticNodes.erase(handle);
+		}
 	}
 
 	void DBTBroadphase::update()
