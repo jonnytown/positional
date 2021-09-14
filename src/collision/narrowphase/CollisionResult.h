@@ -12,11 +12,11 @@ namespace Positional
 {
 	struct CollisionResult
 	{
-		Store<Collider>::Ptr first;
-		Store<Collider>::Ptr second;
+		Store<Collider>::Ref first;
+		Store<Collider>::Ref second;
 		std::vector<ContactPoint> contacts;
 
-		CollisionResult(const Store<Collider>::Ptr &_first, const Store<Collider>::Ptr &_second)
+		CollisionResult(const Store<Collider>::Ref &_first, const Store<Collider>::Ref &_second)
 			: first(_first),
 			  second(_second) {}
 	};

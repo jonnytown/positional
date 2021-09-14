@@ -13,30 +13,22 @@ namespace Positional
 	template <typename T>
 	struct Store
 	{
-		friend struct Ptr;
+		friend struct Ref;
+		struct Handle;
 		struct Ref
 		{
-			UInt64 id;
-			UInt64 index;
-			Store *store;
-
-			Ref(const UInt64 &_id, const UInt64 &_index, Store *_store) : id(_id), index(_index), store(_store) {}
-		};
-
-		struct Ptr
-		{
 			friend struct Store;
-			Ptr()
+			Ref()
 			{
 				m_ptr.reset();
 			}
 
-			Ptr(const Ptr &other)
+			Ref(const Ref &other)
 			{
 				m_ptr = other.m_ptr;
 			}
 
-			Ptr &operator=(const Ptr &other)
+			Ref &operator=(const Ref &other)
 			{
 				m_ptr = other.m_ptr;
 				return *this;
@@ -60,31 +52,31 @@ namespace Positional
 				return shPtr->id;
 			}
 
-			inline T* get() const
+			inline T &get() const
 			{
 				assert(!m_ptr.expired);
 				auto shPtr = m_ptr.lock();
 				assert(shPtr && shPtr->store != NULL);
-				return &(*(shPtr->store->m_data.begin() + shPtr->index));
+				return shPtr->store->m_data[shPtr->index];
 			}
 
-			inline bool operator==(Ptr other) const
+			inline bool operator==(Ref other) const
 			{
 				return m_ptr.lock().get() == other.m_ptr.lock().get();
 			}
 
-			inline bool operator!=(Ptr other) const
+			inline bool operator!=(Ref other) const
 			{
 				return m_ptr.lock().get() != other.m_ptr.lock().get();
 			}
 
 		private:
-			Ptr(shared_ptr<Ref> ref)
+			Ref(shared_ptr<Store::Handle> ref)
 			{
-				m_ptr = weak_ptr<Store::Ref>(ref);
+				m_ptr = weak_ptr<Store::Handle>(ref);
 			}
 
-			weak_ptr<Ref> m_ptr;
+			weak_ptr<Store::Handle> m_ptr;
 		};
 
 		~Store()
@@ -95,43 +87,43 @@ namespace Positional
 			}
 		}
 
-		Ptr store(const T &element)
+		Ref store(const T &element)
 		{
 			m_data.push_back(element);
 
 			auto id = m_nextId++;
 			auto idx = m_data.size() - 1;
 
-			auto ref = make_shared<Ref>(id, idx, this);
+			auto ref = make_shared<Handle>(id, idx, this);
 			m_refs.insert_or_assign(id, ref);
 
-			return Ptr(ref);
+			return Ref(ref);
 		}
 
-		void erase(Ptr ptr)
+		void erase(Ref ref)
 		{
-			assert(!ptr.m_ptr.expired);
-			auto shPtr = ptr.m_ptr.lock();
+			assert(!ref.m_ptr.expired);
+			auto shPtr = ref.m_ptr.lock();
 			assert(shPtr->store == this);
 
 			shPtr->store = NULL;
 			m_refs.erase(shPtr->id);
 			m_data.erase(m_data.begin() + shPtr->index);
 
-			for (const auto &[key, ref] : m_refs)
+			for (const auto &[key, r] : m_refs)
 			{
-				if (ref->index > shPtr->index)
+				if (r->index > shPtr->index)
 				{
-					ref->index--;
+					r->index--;
 				}
 			}
 		}
 
-		void erase(function<bool(const Ptr &elPtr)> predicate)
+		void erase(function<bool(const Ref &elRef)> predicate)
 		{
 			for (const auto &[key, ref] : m_refs)
 			{
-				if (predicate(Ptr(ref)))
+				if (predicate(Ref(ref)))
 				{
 					m_data.erase(m_data.begin() + ref->index);
 					m_refs.erase(key);
@@ -140,8 +132,17 @@ namespace Positional
 		}
 
 	private:
+		struct Handle
+		{
+			UInt64 id;
+			UInt64 index;
+			Store *store;
+
+			Handle(const UInt64 &_id, const UInt64 &_index, Store *_store) : id(_id), index(_index), store(_store) {}
+		};
+
 		UInt64 m_nextId;
-		unordered_map<UInt64, shared_ptr<Ref>> m_refs;
+		unordered_map<UInt64, shared_ptr<Handle>> m_refs;
 		vector<T> m_data;
 	};
 }

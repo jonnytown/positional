@@ -19,14 +19,14 @@ namespace Positional::Collision
 		class Node
 		{
 		public:
-			Store<Collider>::Ptr collider;
+			Store<Collider>::Ref collider;
 			Bounds treeBounds;
 
 			Node() :
-				collider(Store<Collider>::Ptr()),
+				collider(Store<Collider>::Ref()),
 				treeBounds(Bounds(Vec3::zero, Vec3::zero)) {}
 
-			Node(Store<Collider>::Ptr _collider, const Bounds &_treeBounds) :
+			Node(Store<Collider>::Ref _collider, const Bounds &_treeBounds) :
 				collider(_collider),
 				treeBounds(_treeBounds) {}
 		};
@@ -37,21 +37,21 @@ namespace Positional::Collision
 		unordered_map<UInt32, Node> m_staticNodes;
 		Float m_padFactor;
 
-		UInt32 Find(const unordered_map<UInt32, Node> &nodeMap, const Store<Collider>::Ptr &collider) const;
+		UInt32 Find(const unordered_map<UInt32, Node> &nodeMap, const Store<Collider>::Ref &collider) const;
 
 	public:
 		DBTBroadphase(const Float &padFactor = 2.0) : m_padFactor(padFactor) {}
 		~DBTBroadphase() {}
 
 #pragma region ABroadphase Interface
-		virtual void add(const Store<Collider>::Ptr &collider) override;
-		virtual void addStatic(const Store<Collider>::Ptr &collider) override;
-		virtual void remove(const Store<Collider>::Ptr &collider) override;
-		virtual void removeStatic(const Store<Collider>::Ptr &collider) override;
+		virtual void add(const Store<Collider>::Ref &collider) override;
+		virtual void addStatic(const Store<Collider>::Ref &collider) override;
+		virtual void remove(const Store<Collider>::Ref &collider) override;
+		virtual void removeStatic(const Store<Collider>::Ref &collider) override;
 		virtual void update() override;
 
-		virtual void raycast(const Ray &ray, const Float &maxDistance, const UInt32 &mask, vector<Store<Collider>::Ptr> &results) const override;
-		virtual void generateOverlapPairs(vector<pair<Store<Collider>::Ptr, Store<Collider>::Ptr>> &results) const override;
+		virtual void raycast(const Ray &ray, const Float &maxDistance, const UInt32 &mask, vector<Store<Collider>::Ref> &results) const override;
+		virtual void generateOverlapPairs(vector<pair<Store<Collider>::Ref, Store<Collider>::Ref>> &results) const override;
 #pragma endregion ABroadphase Interface
 
 		void forEachNode(const function<void(Bounds)> &callback)

@@ -61,7 +61,7 @@ namespace Positional
 	struct Collider final
 	{
 	private:
-		Store<Body>::Ptr m_body;
+		Store<Body>::Ref m_body;
 		bool m_isStatic;
 		UInt8(*m_shapeId)();
 		Bounds(*m_bounds)(const Collider &);
@@ -76,7 +76,7 @@ namespace Positional
 		Float density;
 		Shape shape;
 
-		Collider(Store<Body>::Ptr body,const Vec3 &_center, const Quat &_rotation, const Shape &_shape)
+		Collider(Store<Body>::Ref body,const Vec3 &_center, const Quat &_rotation, const Shape &_shape)
 			: m_body(body),
 			  m_isStatic(!body.valid()),
 			  m_shapeId(NULL),
@@ -90,7 +90,7 @@ namespace Positional
 			  density(1),
 			  shape(_shape) {}
 
-		Store<Body>::Ptr body() const { return m_body; };
+		Store<Body>::Ref body() const { return m_body; };
 
 		bool isStatic() const { return m_isStatic; }
 
@@ -132,7 +132,7 @@ namespace Positional
 		Vec3 vectorToLocal(const Vec3& vector) const;
 
 		template <typename T>
-		inline static Collider create(Store<Body>::Ptr body, const Vec3 &center, const Quat &rotation, const Shape &shape)
+		inline static Collider create(Store<Body>::Ref body, const Vec3 &center, const Quat &rotation, const Shape &shape)
 		{
 			Collider collider = Collider(body, center, rotation, shape);
 			collider.m_shapeId = T::shapeId;

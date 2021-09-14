@@ -2,5 +2,5 @@
 
 namespace Positional
 {
-	const Store<Body>::Ptr Body::null = Store<Body>::Ptr();
+	const Store<Body>::Ref Body::null = Store<Body>::Ref();
 }

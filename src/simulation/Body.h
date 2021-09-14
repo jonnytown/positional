@@ -62,7 +62,7 @@ namespace Positional
 			return body;
 		}
 
-		static const Store<Body>::Ptr null;
+		static const Store<Body>::Ref null;
 	};
 }
 #endif // ABODY_H
