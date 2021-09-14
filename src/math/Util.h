@@ -26,9 +26,20 @@ namespace Positional
 			return Math::abs(a - b) < epsilon;
 		}
 
+		/*
+		 * Returns -1, 0, or 1
+		 */
 		static inline Float sign(const Float &x)
 		{
 			return (Float)(0 < x) - (Float)(x < 0);
+		}
+		
+		/*
+		 * Returns -1 or 1
+		 */
+		static inline Float signEq(const Float& x)
+		{
+			return (Float)(0 <= x) - (Float)(x < 0);
 		}
 
 		static inline Float clamp(const Float &x, const Float &mn, const Float &mx)

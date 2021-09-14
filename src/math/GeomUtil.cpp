@@ -3,63 +3,7 @@
 
 namespace Positional
 {
-
-	Vec3 GeomUtil::nearestOnTetraderon(const Vec3 &point, const Vec3 &a, const Vec3 &b, const Vec3 &c, const Vec3 &d)
-	{
-		const Vec3 AB = b - a;
-		const Vec3 AC = c - a;
-		const Vec3 AD = d - a;
-		const Vec3 normABC = AB.cross(AC);
-
-		const Vec3 AP = point - a;
-
-		const Float vol = 0.1666666666666666666667 * AD.dot(normABC);
-		const Float v0 = 0.1666666666666666666667 * AP.dot(normABC);
-
-		const Vec3 normADB = AB.cross(AD);
-		const Float v1 = 0.1666666666666666666667 * AP.dot(normADB) * Math::sign(AC.dot(normADB));
-
-		const Vec3 normBDC = AC.cross(AD);
-		const Float v2 = 0.1666666666666666666667 * AP.dot(normBDC) * Math::sign(AB.dot(normBDC));
-
-		const Float s = v0/vol;
-		const Float t = v1/vol;
-		const Float u = v2/vol;
-
-		if (s <= 0 && t <=0 && u <= 0 && s + t + u <= 1)
-		{
-			return point;
-		}
-
-		const Vec3 near1 = nearestOnTriangle(point, a, b, c);
-		const Vec3 near2 = nearestOnTriangle(point, a, d, b);
-		const Vec3 near3 = nearestOnTriangle(point, b, d, c);
-		const Vec3 near4 = nearestOnTriangle(point, a, c, d);
-
-		const Float dSq1 = point.distanceSq(near1);
-		const Float dSq2 = point.distanceSq(near2);
-		const Float dSq3 = point.distanceSq(near3);
-		const Float dSq4 = point.distanceSq(near4);
-
-		if (dSq1 <= dSq2 && dSq1 <= dSq3 && dSq1 <= dSq4)
-		{
-			return near1;
-		}
-
-		if (dSq2 < dSq1 && dSq2 <= dSq3 && dSq2 <= dSq4)
-		{
-			return near2;
-		}
-
-		if (dSq3 < dSq1 && dSq3 < dSq2 && dSq3 <= dSq4)
-		{
-			return near3;
-		}
-
-		return near4;
-	}
-
-	Vec3 GeomUtil::nearestOnTriangle(const Vec3 &point, const Vec3 &a, const Vec3 &b, const Vec3 &c)
+	Vec3 GeomUtil::barycentric(const Vec3 &point, const Vec3 &a, const Vec3 &b, const Vec3 &c)
 	{
 		const Vec3 u = b - a;
 		const Vec3 v = c - a;
@@ -69,42 +13,20 @@ namespace Positional
 		const Float nn = n.lengthSq();
 
 		// project on plane
-		const Vec3 w = point - a;
-		const Vec3 p = w - n * (w.dot(n)/nn);
+		const Vec3 w = point-a;
+		const Vec3 p = w - n * (w.dot(n) / nn);
 
 		// calculate signed areas squared (area of the parellelagram formed by two vectors)
 		const Vec3 uxp = u.cross(p);
 		const Vec3 pxv = p.cross(v);
-		const Float areaU = uxp.lengthSq() * Math::sign(uxp.dot(n));
-		const Float areaV = pxv.lengthSq() * Math::sign(pxv.dot(n));
 
-		const Float s = areaU/nn;
-		const Float t = areaV/nn;
+		const Float s = uxp.lengthSq() / nn;
+		const Float t = pxv.lengthSq() / nn;
 
-		if (s >= 0 && t >= 0 && Math::sqrt(s) + Math::sqrt(t) <= 1)
-		{
-			return a + p;
-		}
+		const Float S = Math::sign(uxp.dot(n)) * Math::sqrt(s);
+		const Float T = Math::sign(pxv.dot(n)) * Math::sqrt(t);
 
-		const Vec3 near1 = nearestOnSegment(point, a, b);
-		const Vec3 near2 = nearestOnSegment(point, b, c);
-		const Vec3 near3 = nearestOnSegment(point, c, a);
-
-		const Float dSq1 = point.distanceSq(near1);
-		const Float dSq2 = point.distanceSq(near2);
-		const Float dSq3 = point.distanceSq(near3);
-
-		if (dSq1 <= dSq2 && dSq1 <= dSq3)
-		{
-			return near1;
-		}
-
-		if (dSq2 < dSq1 && dSq2 <= dSq3)
-		{
-			return near2;
-		}
-
-		return near3;
+		return Vec3(1.0 - S - T, T, S);
 	}
 
 	void GeomUtil::nearestOnSegments(const Vec3 &a0, const Vec3 &a1, const Vec3 &b0, const Vec3 &b1, Vec3 &outA, Vec3 &outB)

@@ -13,12 +13,12 @@ namespace Positional
 		static bool raycastCaps(const Vec3 &c0, const Vec3 &c1, const Float &radius, const Vec3 &r0, const Vec3 &n, const Float &d, Vec3 &outPoint, Vec3 &outNormal, Float &outDistance);
 
 	public:
-		inline static Vec3 nearestOnSegment(const Vec3& point, const Vec3& a0, const Vec3& a1)
+		inline static Vec3 nearestOnSegment(const Vec3 &point, const Vec3 &a, const Vec3 &b)
 		{
-			const Vec3 u = a1 - a0;
-			const Vec3 v = point - a0;
+			const Vec3 u = b - a;
+			const Vec3 v = point - a;
 			const Float t = Math::clamp(v.dot(u) / u.lengthSq(), 0, 1);
-			return a0 + u * t;
+			return a + u * t;
 		}
 
 		inline static Vec3 nearestOnRay(const Vec3 &point, const Vec3 &r0, const Vec3 &n)
@@ -26,8 +26,14 @@ namespace Positional
 			return r0 + n * Math::max((point - r0).dot(n), 0);
 		}
 
-		static Vec3 nearestOnTriangle(const Vec3 &point, const Vec3 &a, const Vec3 &b, const Vec3 &c);
-		static Vec3 nearestOnTetraderon(const Vec3 &point, const Vec3 &a, const Vec3 &b, const Vec3 &c, const Vec3 &d);
+		static Vec3 barycentric(const Vec3 &point, const Vec3 &a, const Vec3 &b, const Vec3 &c);
+
+		inline static Vec3 normal(const Vec3 &a, const Vec3 &b, const Vec3 &c)
+		{
+			const Vec3 u = b - a;
+			const Vec3 v = c - a;
+			return u.cross(v);
+		}
 
 		static void nearestOnSegments(const Vec3 &a0, const Vec3 &a1, const Vec3 &b0, const Vec3 &b1, Vec3 &outA, Vec3 &outB);
 		static void nearestOnRaySegment(const Vec3 &r0, const Vec3 &n, const Vec3 &c0, const Vec3 &c1, Vec3 &outA, Vec3 &outB);

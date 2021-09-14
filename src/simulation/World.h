@@ -199,12 +199,11 @@ namespace Positional
 
 					for(UInt32 i = 0, count = broadResults.size(); i < count; ++i)
 					{
-						Vec3 normal;
-						Float depth;
-						if (Collision::Penetration::compute(*broadResults[i].first.get(), *broadResults[i].second.get(), depth, normal))
+						ContactPoint contact;
+						if (Collision::Penetration::compute(*broadResults[i].first.get(), *broadResults[i].second.get(), contact))
 						{
 							auto result = CollisionResult(broadResults[i].first, broadResults[i].second);
-							result.contacts.emplace_back(Vec3::zero, normal, depth, Vec3::zero, Vec3::zero);
+							result.contacts.push_back(contact);
 							callback(result);
 						}
 					}
