@@ -91,6 +91,8 @@ namespace Positional
 		}
 
 		// static friction
+		getWorldContacts(constraint, posA, posB);
+
 		const Vec3 dp = (posB.value() - prevB) - (posA.value() - prevA);
 		const Vec3 dpTan = dp - contact.normal * dp.dot(contact.normal);
 		Vec3 normalT;
@@ -113,25 +115,27 @@ namespace Positional
 			assert(world.has_value());
 
 			optional<Vec3> posA, posB;
-			Vec3 prevA, prevB;
-			getWorldContacts(constraint, prevA, posA, prevB, posB);
-
-			// dynamic friction
-			Vec3 v = getVelocity(constraint, posA, posB);
-
-			const Float vn = d->contact.normal.dot(v);
-			const Vec3 vt = v - d->contact.normal * vn;
-
-			const Float vtLen = vt.length();
-			const Vec3 dynamicFriction = (vt / vtLen) * Math::min(dt * d->dynamicFriction * d->force, vtLen);
-
-			constraint.applyCorrections(dynamicFriction, 0, dtInvSq, true, posA, posB);
+			getWorldContacts(constraint, posA, posB);
 
 			// restitution
+			Vec3 v = getVelocity(constraint, posA, posB);
+			Float vn = d->contact.normal.dot(v);
+
 			const Float prevVn = d->contact.normal.dot(d->prevVelocity);
 			const Float e = Math::abs(vn) < 2.0 * dt * world.value()->gravity.length() ? 0 : d->restitution;
 			const Vec3 restitution = d->contact.normal * (-vn + Math::max(-e * prevVn, 0));
 			constraint.applyCorrections(restitution, 0, dtInvSq, true, posA, posB);
+
+			// dynamic friction
+			v = getVelocity(constraint, posA, posB);
+			vn = d->contact.normal.dot(v);
+
+			const Vec3 vt = v - d->contact.normal * vn;
+			const Float vtLen = vt.length();
+			const Vec3 dynamicFriction = (vt / -vtLen) * Math::min(dt * d->dynamicFriction * d->force, vtLen);
+
+			constraint.applyCorrections(dynamicFriction, 0, dtInvSq, true, posA, posB);
+
 			
 		}
 	}
