@@ -30,6 +30,19 @@ namespace Positional
 			m[8] = 1.0;
 		}
 
+		Mat3x3(const Float &v)
+		{
+			m[0] = v;
+			m[1] = v;
+			m[2] = v;
+			m[3] = v;
+			m[4] = v;
+			m[5] = v;
+			m[6] = v;
+			m[7] = v;
+			m[8] = v;
+		}
+
 		Mat3x3(
 			const Float &m11, const Float &m12, const Float &m13,
 			const Float &m21, const Float &m22, const Float &m23,
@@ -46,19 +59,6 @@ namespace Positional
 			m[8] = m33;
 		}
 
-		Mat3x3(const Float _m[9])
-		{
-			m[0] = _m[0];
-			m[1] = _m[1];
-			m[2] = _m[2];
-			m[3] = _m[3];
-			m[4] = _m[4];
-			m[5] = _m[5];
-			m[6] = _m[6];
-			m[7] = _m[7];
-			m[8] = _m[8];
-		}
-
 		Mat3x3(const Vec3 &c1, const Vec3 &c2, const Vec3 &c3)
 		{
 			m[0] = c1.x;
@@ -70,6 +70,71 @@ namespace Positional
 			m[6] = c1.z;
 			m[7] = c2.z;
 			m[8] = c3.z;
+		}
+
+		Mat3x3(const Quat &quat)
+		{
+			/*
+			const Float xx = quat.x * quat.x;
+			const Float yy = quat.y * quat.y;
+			const Float zz = quat.z * quat.z;
+
+			const Float xy = quat.x * quat.y;
+			const Float wz = quat.z * quat.w;
+			const Float xz = quat.z * quat.x;
+			const Float wy = quat.y * quat.w;
+			const Float yz = quat.y * quat.z;
+			const Float wx = quat.x * quat.w;
+
+			return Mat3x3(
+				1.0 - 2.0 * (yy + zz),
+				2.0 * (xy + wz),
+				2.0 * (xz - wy),
+				2.0 * (xy - wz),
+				1.0 - 2.0 * (zz + xx),
+				2.0 * (yz + wx),
+				2.0 * (xz + wy),
+				2.0 * (yz - wx),
+				1.0 - 2.0 * (yy + xx)
+			);
+			*/
+
+			const Float x = quat.x;
+			const Float y = quat.y;
+			const Float z = quat.z;
+			const Float w = quat.w;
+
+			const Float x2 = x + x;
+			const Float y2 = y + y;
+			const Float z2 = z + z;
+
+			const Float xx = x2 * x;
+			const Float yy = y2 * y;
+			const Float zz = z2 * z;
+
+			const Float xy = x2 * y;
+			const Float xz = x2 * z;
+			const Float xw = x2 * w;
+
+			const Float yz = y2 * z;
+			const Float yw = y2 * w;
+			const Float zw = z2 * w;
+
+			m[0] = 1.0 - yy - zz; m[1] = xy - zw;       m[2] = xz + yw;
+			m[3] = xy + zw;       m[4] = 1.0 - xx - zz; m[5] = yz - xw;
+			m[6] = xz - yw;       m[7] = yz + xw;       m[8] = 1.0 - xx - yy;
+		}
+
+		Mat3x3(const Float &angle, const Vec3 &axis)
+		{
+			const Float x = axis.x, y = axis.y, z = axis.z;
+			const Float sa = Math::sin(angle), ca = Math::cos(angle);
+			const Float xx = x * x, yy = y * y, zz = z * z;
+			const Float xy = x * y, xz = x * z, yz = y * z;
+
+			m[0] = xx + ca * (1.0 - xx); m[1] = xy - ca * xy + sa * z; m[2] = xz - ca * xz - sa * y;
+			m[3] = xy - ca * xy - sa * z; m[4] = yy + ca * (1.0 - yy); m[5] = yz - ca * yz + sa * x;
+			m[6] = xz - ca * xz + sa * y; m[7] = yz - ca * yz - sa * x; m[8] = zz + ca * (1.0 - zz);
 		}
 
 		Float m11() const { return m[0]; }
@@ -116,16 +181,14 @@ namespace Positional
 
 		Mat3x3 & operator=(const Mat3x3 &rhs)
 		{
-			m[0] = rhs.m[0];
-			m[1] = rhs.m[1];
-			m[2] = rhs.m[2];
-			m[3] = rhs.m[3];
-			m[4] = rhs.m[4];
-			m[5] = rhs.m[5];
-			m[6] = rhs.m[6];
-			m[7] = rhs.m[7];
-			m[8] = rhs.m[8];
+			std::memcpy(m, rhs.m, sizeof(Float) * 9);
 			return *this;
+		}
+
+		Float &operator[](const UInt32 &i)
+		{
+			assert(i < 9);
+			return m[i];
 		}
 
 		bool operator==(const Mat3x3 &rhs) const
@@ -318,6 +381,11 @@ namespace Positional
 
 		Mat3x3 operator*(const Mat3x3 &rhs) const
 		{
+			/*
+			|m11=0, m12=1, m13=2|
+			|m21=3, m22=4, m23=5|
+			|m31=6, m32=7, m33=8|
+			*/
 			return Mat3x3(
 				m[0] * rhs.m[0] + m[1] * rhs.m[3] + m[2] * rhs.m[6],
 				m[0] * rhs.m[1] + m[1] * rhs.m[4] + m[2] * rhs.m[7],
@@ -325,7 +393,7 @@ namespace Positional
 
 				m[3] * rhs.m[0] + m[4] * rhs.m[3] + m[5] * rhs.m[6],
 				m[3] * rhs.m[1] + m[4] * rhs.m[4] + m[5] * rhs.m[7],
-				m[3] * rhs.m[3] + m[4] * rhs.m[5] + m[5] * rhs.m[8],
+				m[3] * rhs.m[2] + m[4] * rhs.m[5] + m[5] * rhs.m[8],
 
 				m[6] * rhs.m[0] + m[7] * rhs.m[3] + m[8] * rhs.m[6],
 				m[6] * rhs.m[1] + m[7] * rhs.m[4] + m[8] * rhs.m[7],
@@ -359,44 +427,28 @@ namespace Positional
 				m[6] * rhs, m[7] * rhs, m[8] * rhs);
 		}
 
-		static inline Mat3x3 fromAngleAxis(const Float &angle, const Vec3 &axis)
+		friend Mat3x3 operator*(const Float &lhs, const Mat3x3 &rhs)
 		{
-			Float x = axis.x, y = axis.y, z = axis.z;
-			Float sa = Math::sin(angle), ca = Math::cos(angle);
-			Float xx = x * x, yy = y * y, zz = z * z;
-			Float xy = x * y, xz = x * z, yz = y * z;
-
 			return Mat3x3(
-				xx + ca * (1.0f - xx), xy - ca * xy + sa * z, xz - ca * xz - sa * y,
-				xy - ca * xy - sa * z, yy + ca * (1.0f - yy), yz - ca * yz + sa * x,
-				xz - ca * xz + sa * y, yz - ca * yz - sa * x, zz + ca * (1.0f - zz));
+				lhs * rhs.m[0], lhs * rhs.m[1], lhs * rhs.m[2],
+				lhs * rhs.m[3], lhs * rhs.m[4], lhs * rhs.m[5],
+				lhs * rhs.m[6], lhs * rhs.m[7], lhs * rhs.m[8]);
 		}
 
-		static inline Mat3x3 fromQuat(const Quat &quat)
+		Mat3x3 operator/(const Float &rhs) const
 		{
-			Float xx = quat.x * quat.x;
-			Float yy = quat.y * quat.y;
-			Float zz = quat.z * quat.z;
-
-			Float xy = quat.x * quat.y;
-			Float wz = quat.z * quat.w;
-			Float xz = quat.z * quat.x;
-			Float wy = quat.y * quat.w;
-			Float yz = quat.y * quat.z;
-			Float wx = quat.x * quat.w;
-
 			return Mat3x3(
-				1.0 - 2.0 * (yy + zz),
-				2.0 * (xy + wz),
-				2.0 * (xz - wy),
+				m[0] / rhs, m[1] / rhs, m[2] / rhs,
+				m[3] / rhs, m[4] / rhs, m[5] / rhs,
+				m[6] / rhs, m[7] / rhs, m[8] / rhs);
+		}
 
-				2.0 * (xy - wz),
-				1.0 - 2.0 * (zz + xx),
-				2.0 * (yz + wx),
-
-				2.0 * (xz + wy),
-				(yz - wx),
-				1.0 - 2.0 * (yy + xx));
+		friend Mat3x3 operator/(const Float &lhs, const Mat3x3 &rhs)
+		{
+			return Mat3x3(
+				lhs / rhs.m[0], lhs / rhs.m[1], lhs / rhs.m[2],
+				lhs / rhs.m[3], lhs / rhs.m[4], lhs / rhs.m[5],
+				lhs / rhs.m[6], lhs / rhs.m[7], lhs / rhs.m[8]);
 		}
 
 		static const Mat3x3 identity;

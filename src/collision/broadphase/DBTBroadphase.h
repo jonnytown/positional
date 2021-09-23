@@ -48,10 +48,10 @@ namespace Positional::Collision
 		virtual void addStatic(const Store<Collider>::Ref &collider) override;
 		virtual void remove(const Store<Collider>::Ref &collider) override;
 		virtual void removeStatic(const Store<Collider>::Ref &collider) override;
-		virtual void update() override;
+		virtual void update(const Float &dt) override;
 
 		virtual void raycast(const Ray &ray, const Float &maxDistance, const UInt32 &mask, vector<Store<Collider>::Ref> &results) const override;
-		virtual void generateOverlapPairs(vector<pair<Store<Collider>::Ref, Store<Collider>::Ref>> &results) const override;
+		virtual void forEachOverlapPair(const function<void(pair<Store<Collider>::Ref, Store<Collider>::Ref>)> &callback) const override;
 #pragma endregion ABroadphase Interface
 
 		void forEachNode(const function<void(Bounds)> &callback)

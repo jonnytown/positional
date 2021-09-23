@@ -39,7 +39,9 @@
 		"atomic": "cpp",
 		"compare": "cpp",
 		"concepts": "cpp",
-		"typeinfo": "cpp"
+		"typeinfo": "cpp",
+		"bit": "cpp",
+		"ctime": "cpp"
 	},
 	"C_Cpp.default.includePath": ["${workspaceRoot}/src"]
 }

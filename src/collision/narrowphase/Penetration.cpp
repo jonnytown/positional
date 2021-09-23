@@ -1,4 +1,5 @@
 #include "Penetration.h"
+#include "simulation/Body.h"
 #include "collision/collider/Collider.h"
 #include "collision/collider/BoxCollider.h"
 #include "collision/collider/SphereCollider.h"
@@ -6,7 +7,7 @@
 
 namespace Positional::Collision
 {
-	const Float k_epsilonSq = 0.00001;
+	const Float k_epsilonSq = 0.000001;
 
 	bool Penetration::compute(const Collider &a, const Collider &b, ContactPoint &outContact)
 	{
@@ -41,10 +42,8 @@ namespace Positional::Collision
 	{
 		outContact.normal = normal;
 		outContact.depth = depth;
-		outContact.pointA = center + normal * (radius - depth);
-		outContact.pointB = center + normal * radius;
-		outContact.localA = a.pointToLocal(outContact.pointA);
-		outContact.localB = b.pointToLocal(outContact.pointB);
+		outContact.pointA = Body::pointToLocal(a.body(), center + normal * (radius - depth));
+		outContact.pointB = Body::pointToLocal(b.body(), center + normal * radius);
 	}
 
 	inline void makeContact(
@@ -62,7 +61,6 @@ namespace Positional::Collision
 		{
 			outContact.normal = -outContact.normal;
 			std::swap(outContact.pointA, outContact.pointB);
-			std::swap(outContact.localA, outContact.localB);
 		}
 	}
 
@@ -199,24 +197,6 @@ namespace Positional::Collision
 		outSupportB = b.localSupport(axisB);
 
 		outSupport = a.pointToWorld(outSupportA) - b.pointToWorld(outSupportB);
-	}
-
-	inline void tangents(const Vec3 &axis, Vec3 &outTangent1, Vec3 &outTangent2)
-	{
-		if (axis.x >= 0.57735)
-		{
-			outTangent1.x = axis.y;
-			outTangent1.y = -axis.x;
-			outTangent1.z = 0;
-		}
-		else
-		{
-			outTangent1.x = 0;
-			outTangent1.y = axis.z;
-			outTangent1.z = -axis.y;
-		}
-
-		outTangent2 = axis.cross(outTangent1);
 	}
 
 	inline UInt8 leastSignificantComponent(const Vec3 &v)
@@ -389,17 +369,19 @@ namespace Positional::Collision
 			outPolytope.vertices[ib],
 			outPolytope.vertices[ic]);
 
-		outContact.localA = outPolytope.verticesA[ia] * bary.x
+		outContact.pointA = Body::pointToLocal(a.body(), a.pointToWorld(
+			outPolytope.verticesA[ia] * bary.x
 			+ outPolytope.verticesA[ib] * bary.y
-			+ outPolytope.verticesA[ic] * bary.z;
+			+ outPolytope.verticesA[ic] * bary.z));
 
-		outContact.localB = outPolytope.verticesB[ia] * bary.x
+		outContact.pointB = Body::pointToLocal(b.body(), b.pointToWorld(
+			outPolytope.verticesB[ia] * bary.x
 			+ outPolytope.verticesB[ib] * bary.y
-			+ outPolytope.verticesB[ic] * bary.z;
+			+ outPolytope.verticesB[ic] * bary.z));
 
-		outContact.pointA = a.pointToWorld(outContact.localA);
-		outContact.pointB = b.pointToWorld(outContact.localB);
-		outContact.normal = -nearest.normalized();
+
 		outContact.depth = Math::sqrt(nearestLenSq);
+		outContact.normal = nearest / -outContact.depth;
+		
 	}
 } // namespace Positional

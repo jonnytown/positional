@@ -87,7 +87,7 @@ namespace Positional::Collision
 
 		void raycast(const Ray &ray, const Float &maxDistance, const UInt32 &mask, const ResultCallback &resultsCallback) const;
 		void intersects(const Bounds &bounds, const UInt32 &mask, const ResultCallback &resultsCallback, const bool &exclusive = false) const;
-		void generateOverlapPairs(const ResultPairCallback &resultsCallback, const bool &exclusive = false) const;
+		void forEachOverlapPair(const ResultPairCallback &resultsCallback, const bool &exclusive = false) const;
 
 		void forEachNode(const function<void(Bounds)> &callback)
 		{

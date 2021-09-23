@@ -79,12 +79,20 @@ namespace Positional
 			weak_ptr<Store::Handle> m_ptr;
 		};
 
+		Store() : m_nextId(0) {}
+
 		~Store()
 		{
 			for (const auto &[key, ref] : m_refs)
 			{
 				ref->store = NULL;
 			}
+		}
+
+		inline UInt64 count() const { return m_data.size(); }
+		inline T &operator[](const UInt64 &i)
+		{
+			return m_data[i];
 		}
 
 		Ref store(const T &element)
@@ -100,11 +108,18 @@ namespace Positional
 			return Ref(ref);
 		}
 
-		void erase(Ref ref)
+		bool erase(const Ref &ref)
 		{
-			assert(!ref.m_ptr.expired);
+			if (!ref.valid())
+			{
+				return false;
+			}
+
 			auto shPtr = ref.m_ptr.lock();
-			assert(shPtr->store == this);
+			if (shPtr->store != this)
+			{
+				return false;
+			}
 
 			shPtr->store = NULL;
 			m_refs.erase(shPtr->id);
@@ -117,17 +132,27 @@ namespace Positional
 					r->index--;
 				}
 			}
+
+			return true;
 		}
 
-		void erase(function<bool(const Ref &elRef)> predicate)
+		void erase(const function<bool(const Ref &elRef)> &predicate)
 		{
 			for (const auto &[key, ref] : m_refs)
 			{
-				if (predicate(Ref(ref)))
+				if (predicate(ref))
 				{
 					m_data.erase(m_data.begin() + ref->index);
 					m_refs.erase(key);
 				}
+			}
+		}
+
+		void forEach(const function<void(const Ref &elRef)> &callback)
+		{
+			for (const auto &[key, ref] : m_refs)
+			{
+				callback(ref);
 			}
 		}
 

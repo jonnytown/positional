@@ -4,35 +4,35 @@
 
 namespace Positional
 {
-	Vec3 Collider::pointToWorld(const Vec3& point) const
+	Vec3 Collider::pointToWorld(const Vec3 &point) const
 	{
-		Vec3 bodySpace = rotation * point + center;
+		Vec3 bodySpace = pose.transform(point);
 		if (m_body.valid())
 		{
-			return m_body.get().pointToWorld(point);
+			return m_body.get().frame.transform(bodySpace);
 		}
 		return bodySpace;
 	}
 
-	Vec3 Collider::pointToLocal(const Vec3& point) const
+	Vec3 Collider::vectorToWorld(const Vec3 &vector) const
 	{
-		Vec3 bodySpace = m_body.valid() ? m_body.get().pointToLocal(point) : point;
-		return rotation.inverse() * (bodySpace - center);
-	}
-
-	Vec3 Collider::vectorToWorld(const Vec3& vector) const
-	{
-		Vec3 bodySpace = rotation * vector;
+		Vec3 bodySpace = pose.rotate(vector);
 		if (m_body.valid())
 		{
-			return m_body.get().vectorToWorld(vector);
+			return m_body.get().frame.rotate(bodySpace);
 		}
 		return bodySpace;
 	}
 
-	Vec3 Collider::vectorToLocal(const Vec3& vector) const
+	Vec3 Collider::pointToLocal(const Vec3 &point) const
 	{
-		Vec3 bodySpace = m_body.valid() ? m_body.get().vectorToLocal(vector) : vector;
-		return rotation.inverse() * bodySpace;
+		Vec3 bodySpace = m_body.valid() ? m_body.get().frame.inverseTransform(point) : point;
+		return pose.inverseTransform(bodySpace);
+	}
+
+	Vec3 Collider::vectorToLocal(const Vec3 &vector) const
+	{
+		Vec3 bodySpace = m_body.valid() ? m_body.get().frame.inverseRotate(vector) : vector;
+		return pose.inverseRotate(bodySpace);
 	}
 }

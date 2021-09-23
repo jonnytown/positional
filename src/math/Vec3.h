@@ -30,7 +30,7 @@ namespace Positional
 		inline Float &operator[](const UInt8 &axis)
 		{
 			assert(axis < 3);
-			return ((Float*)this)[axis];
+			return *(reinterpret_cast<Float *>(this) + axis);
 		}
 
 		inline bool operator==(const Vec3 &rhs) const

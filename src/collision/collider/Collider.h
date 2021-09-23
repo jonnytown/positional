@@ -6,12 +6,18 @@
 #include <optional>
 #include <functional>
 #include "ShapeId.h"
+#include "simulation/Pose.h"
 
 using namespace std;
 
 namespace Positional
 {
 	struct Body;
+
+	namespace Mass
+	{
+		struct Computer;
+	}
 
 	union Shape
 	{
@@ -63,32 +69,56 @@ namespace Positional
 	private:
 		Store<Body>::Ref m_body;
 		bool m_isStatic;
-		UInt8(*m_shapeId)();
+		UInt8 m_shapeId;
 		Bounds(*m_bounds)(const Collider &);
 		Float(*m_volume)(const Collider &);
 		bool(*m_raycast)(const Collider &, const Ray &, const Float &, Vec3 &, Vec3 &, Float &);
 		Vec3(*m_support)(const Collider &, const Vec3 &);
+		void(*m_computeMass)(const Collider &, Mass::Computer &);
+
+		Collider(
+			const Store<Body>::Ref& body,
+			const UInt8& shapeId,
+			const Shape& _shape,
+			const Vec3& position,
+			const Quat& rotation,
+			const bool& hasRotation,
+			const Float& _density,
+			const Float& _staticFriction,
+			const Float& _dynamicFriction,
+			const Float& _restitution,
+			Bounds(*bounds)(const Collider&),
+			Float(*volume)(const Collider&),
+			bool(*raycast)(const Collider&, const Ray&, const Float&, Vec3&, Vec3&, Float&),
+			Vec3(*support)(const Collider&, const Vec3&),
+			void(*computeMass)(const Collider&, Mass::Computer&)
+		) :
+			m_body(body),
+			m_isStatic(!body.valid()),
+			m_shapeId(shapeId),
+			m_bounds(bounds),
+			m_volume(volume),
+			m_raycast(raycast),
+			m_support(support),
+			m_computeMass(computeMass),
+			shape(_shape),
+			pose(position, rotation, hasRotation),
+			mask(0xFFFFFFFFui32),
+			density(_density),
+			staticFriction(_staticFriction),
+			dynamicFriction(_dynamicFriction),
+			restitution(_restitution)
+		{
+		}
 
 	public:
-		Vec3 center;
-		Quat rotation;
+		Shape shape;
+		Pose pose;
 		UInt32 mask;
 		Float density;
-		Shape shape;
-
-		Collider(Store<Body>::Ref body,const Vec3 &_center, const Quat &_rotation, const Shape &_shape)
-			: m_body(body),
-			  m_isStatic(!body.valid()),
-			  m_shapeId(NULL),
-			  m_bounds(NULL),
-			  m_volume(NULL),
-			  m_raycast(NULL),
-			  m_support(NULL),
-			  center(_center),
-			  rotation(_rotation),
-			  mask(0xffffffffui32),
-			  density(1),
-			  shape(_shape) {}
+		Float staticFriction;
+		Float dynamicFriction;
+		Float restitution;
 
 		Store<Body>::Ref body() const { return m_body; };
 
@@ -121,26 +151,41 @@ namespace Positional
 		Float volume() const { return m_volume(*this); }
 
 		/*
+		 * Compute mass properties
+		 */
+		void computeMass(Mass::Computer &computer) const { m_computeMass(*this, computer); }
+
+		/*
 		 * shape id of the collider
 		 */
-		UInt8 shapeId() const { return m_shapeId(); }
+		UInt8 shapeId() const { return m_shapeId; }
 
-		Vec3 pointToWorld(const Vec3& point) const;
-		Vec3 pointToLocal(const Vec3& point) const;
+		Vec3 pointToWorld(const Vec3 &point) const;
+		Vec3 vectorToWorld(const Vec3 &vector) const;
 
-		Vec3 vectorToWorld(const Vec3& vector) const;
-		Vec3 vectorToLocal(const Vec3& vector) const;
+		Vec3 pointToLocal(const Vec3 &point) const;
+		Vec3 vectorToLocal(const Vec3 &vector) const;
 
 		template <typename T>
-		inline static Collider create(Store<Body>::Ref body, const Vec3 &center, const Quat &rotation, const Shape &shape)
-		{
-			Collider collider = Collider(body, center, rotation, shape);
-			collider.m_shapeId = T::shapeId;
-			collider.m_bounds = T::bounds;
-			collider.m_volume = T::volume;
-			collider.m_raycast = T::raycast;
-			collider.m_support = T::localSupport;
-			return collider;
+		inline static Collider create(const Store<Body>::Ref &body, const Vec3 &position, const Quat &rotation, const Shape &shape, const Float &density, const Float &staticFriction, const Float &dynamicFriction, const Float &bounciness)
+		{			
+			return Collider(
+				body,
+				T::shapeId(),
+				shape,
+				position,
+				rotation,
+				T::hasRotation(),
+				density,
+				staticFriction,
+				dynamicFriction,
+				bounciness,
+				T::bounds,
+				T::volume,
+				T::raycast,
+				T::localSupport,
+				T::computeMass
+			);
 		}
 	};
 }

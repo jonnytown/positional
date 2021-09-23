@@ -65,9 +65,15 @@ namespace Positional
 
 		if (det < Math::Epsilon * uu * vv)
 		{
+			const Vec3 w = b1 - a0;
+			const Float wu = w.dot(u);
 			// segments are parallel
-			s = Math::clamp(ru / uu, 0, 1);
-			t = 0;
+			s = 0.5 * (Math::clamp(ru / uu, 0, 1) + Math::clamp(wu / uu, 0, 1));
+
+			const Vec3 x = (a0 + u * s) - b0;
+			const Float xv = x.dot(v);
+
+			t = Math::clamp(xv / vv, 0, 1);
 		}
 		else
 		{

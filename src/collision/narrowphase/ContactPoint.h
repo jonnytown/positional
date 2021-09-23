@@ -10,10 +10,10 @@ namespace Positional
 {
 	struct ContactPoint
 	{
+		// in local body space
 		Vec3 pointA;
 		Vec3 pointB;
-		Vec3 localA;
-		Vec3 localB;
+		// in world space
 		Vec3 normal;
 		Float depth;
 	};

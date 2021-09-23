@@ -1,4 +1,5 @@
 #include "DBTBroadphase.h"
+#include "simulation/Body.h"
 
 namespace Positional::Collision
 {
@@ -40,16 +41,18 @@ namespace Positional::Collision
 		}
 	}
 
-	void DBTBroadphase::update()
+	void DBTBroadphase::update(const Float &dt)
 	{
 		for (auto &[handle, node] : m_dynamicNodes)
 		{
 			const Collider &collider = node.collider.get();
 			const Bounds &bounds = collider.bounds();
+			const Bounds predictedBounds = Bounds(bounds.center + m_padFactor * dt * collider.body().get().frame.velocity, bounds.extents());
 
-			if (!node.treeBounds.contains(bounds))
+			if (!node.treeBounds.contains(predictedBounds))
 			{
-				node.treeBounds = Bounds(bounds.center, bounds.extents() * m_padFactor);
+				node.treeBounds = bounds.merged(predictedBounds);
+				node.treeBounds.expand(bounds.extents() * (m_padFactor * 0.5));
 				m_dynamicTree.update(handle, node.treeBounds, collider.mask);
 			}
 		}
@@ -91,9 +94,9 @@ namespace Positional::Collision
 			});
 	}
 
-	void DBTBroadphase::generateOverlapPairs(vector<pair<Store<Collider>::Ref, Store<Collider>::Ref>> &results) const
+	void DBTBroadphase::forEachOverlapPair(const function<void(pair<Store<Collider>::Ref, Store<Collider>::Ref>)> &callback) const
 	{
-		m_dynamicTree.generateOverlapPairs(
+		m_dynamicTree.forEachOverlapPair(
 			[&, this](const auto &pair)
 			{
 				const Node &node1 = m_dynamicNodes.at(pair.first);
@@ -101,7 +104,7 @@ namespace Positional::Collision
 				// TODO: find better way to check for colliders with the same body, possibly need to implement compound collider
 				if (node1.collider.get().body() != node2.collider.get().body())
 				{
-					results.push_back(make_pair(node1.collider, node2.collider));
+					callback(make_pair(node1.collider, node2.collider));
 				}
 			},
 			false);
@@ -111,12 +114,12 @@ namespace Positional::Collision
 			auto ref = node.collider;
 			const Collider &collider = ref.get();
 			m_staticTree.intersects(
-				collider.bounds(),
+				node.treeBounds,
 				collider.mask,
 				[&, this](const UInt32 &handle)
 				{
 					const Node &staticNode = m_staticNodes.at(handle);
-					results.push_back(make_pair(ref, staticNode.collider));
+					callback(make_pair(ref, staticNode.collider));
 				});
 		}
 	}

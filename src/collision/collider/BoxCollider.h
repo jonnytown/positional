@@ -6,6 +6,7 @@
 
 #include "ShapeId.h"
 #include "mass/Volume.h"
+#include "mass/Computer.h"
 
 namespace Positional::Collision
 {
@@ -50,8 +51,15 @@ namespace Positional::Collision
 				Math::sign(axis.z) * extents.z);
 		}
 
-		private:
-			BoxCollider() = delete;
+		static void computeMass(const Collider &collider, Mass::Computer &computer)
+		{
+			computer.setBox(collider.shape.extents, collider.pose.position, collider.pose.rotation, collider.density);
+		}
+
+		static bool hasRotation() { return true; }
+
+	private:
+		BoxCollider() = delete;
 	};
 }
 #endif // BOX_COLLIDER_H

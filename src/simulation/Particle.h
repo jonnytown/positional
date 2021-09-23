@@ -8,10 +8,19 @@ namespace Positional
 {
 	struct Particle final
 	{
-		static Vec3 pointToWorld(const Body &body, const Vec3 &point) { return body.position + point; }
-		static Vec3 pointToLocal(const Body &body, const Vec3 &point) { return point - body.position; }
-		static Vec3 vectorToWorld(const Body &body, const Vec3 &vector) { return vector; }
-		static Vec3 vectorToLocal(const Body &body, const Vec3 &vector) { return vector; }
+		static void integrate(Body &body, const Float &dt, const Vec3 &gravity)
+		{
+			// TODO: apply all external forces
+			body.frame.velocity = body.frame.velocity + dt * gravity;
+			body.frame.position = body.frame.position + dt * body.frame.velocity;
+		}
+
+		static void differentiate(Body &body, const Float &dtInv)
+		{
+			body.frame.velocity = (body.frame.position - body.prevFrame.position) * dtInv;
+		}
+
+		static bool hasRotation() { return false; }
 
 	private:
 		Particle() {}

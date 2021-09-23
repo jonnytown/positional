@@ -50,8 +50,16 @@ namespace Positional::Collision
 
 			return c[dot1 > dot0] + axis * collider.shape.radius;
 		}
+
+		static void computeMass(const Collider &collider, Mass::Computer &computer)
+		{
+			computer.setCapsule(collider.shape.radius, collider.shape.length, collider.pose.position, collider.pose.rotation, collider.density);
+		}
+
+		static bool hasRotation() { return true; }
+
 	private:
-		CapsuleCollider() {}
+		CapsuleCollider() = delete;
 	};
 }
 #endif // CAPSULE_COLLIDER_H

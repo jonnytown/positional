@@ -6,6 +6,7 @@
 
 #include "ShapeId.h"
 #include "mass/Volume.h"
+#include "mass/Computer.h"
 
 namespace Positional::Collision
 {
@@ -30,6 +31,16 @@ namespace Positional::Collision
 		{
 			return axis * collider.shape.radius;
 		}
+
+		static void computeMass(const Collider &collider, Mass::Computer &computer)
+		{
+			computer.setSphere(collider.shape.radius, collider.pose.position, collider.density);
+		}
+
+		static bool hasRotation() { return false; }
+
+	private:
+		SphereCollider() = delete;
 	};
 
 	

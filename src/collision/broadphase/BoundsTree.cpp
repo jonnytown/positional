@@ -127,7 +127,7 @@ namespace Positional::Collision
 		}
 	}
 
-	void BoundsTree::generateOverlapPairs(const ResultPairCallback &resultsCallback, const bool &exclusive) const
+	void BoundsTree::forEachOverlapPair(const ResultPairCallback &resultsCallback, const bool &exclusive) const
 	{
 		if (m_root == NOT_FOUND)
 		{

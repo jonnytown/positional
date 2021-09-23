@@ -14,11 +14,12 @@ namespace Positional
 	{
 		Store<Collider>::Ref first;
 		Store<Collider>::Ref second;
-		std::vector<ContactPoint> contacts;
+		ContactPoint contact;
 
-		CollisionResult(const Store<Collider>::Ref &_first, const Store<Collider>::Ref &_second)
+		CollisionResult(const Store<Collider>::Ref &_first, const Store<Collider>::Ref &_second, const ContactPoint &_contact)
 			: first(_first),
-			  second(_second) {}
+			  second(_second),
+			  contact(_contact) {}
 	};
 }
 #endif // COLLISION_RESULT_H

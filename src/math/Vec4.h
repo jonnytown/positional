@@ -47,7 +47,7 @@ namespace Positional
 		inline Float &operator[](const UInt8 &axis)
 		{
 			assert(axis < 4);
-			return ((Float *)this)[axis];
+			return *(reinterpret_cast<Float *>(this) + axis);
 		}
 
 		inline Vec4 operator-() const

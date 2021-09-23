@@ -20,10 +20,10 @@ namespace Positional::Collision
 		virtual void addStatic(const Store<Collider>::Ref &collider) = 0;
 		virtual void remove(const Store<Collider>::Ref &collider) = 0;
 		virtual void removeStatic(const Store<Collider>::Ref &collider) = 0;
-		virtual void update() = 0;
+		virtual void update(const Float &dt) = 0;
 
 		virtual void raycast(const Ray &ray, const Float &maxDistance, const UInt32 &mask, vector<Store<Collider>::Ref> &results) const = 0;
-		virtual void generateOverlapPairs(vector<pair<Store<Collider>::Ref, Store<Collider>::Ref>> &results) const = 0;
+		virtual void forEachOverlapPair(const function<void(pair<Store<Collider>::Ref, Store<Collider>::Ref>)> &callback) const = 0;
 	};
 }
 #endif // ABROADPHASE_H

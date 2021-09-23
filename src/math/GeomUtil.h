@@ -35,6 +35,24 @@ namespace Positional
 			return u.cross(v);
 		}
 
+		inline void tangents(const Vec3 &axis, Vec3 &outTangent1, Vec3 &outTangent2)
+		{
+			if (axis.x >= 0.57735)
+			{
+				outTangent1.x = axis.y;
+				outTangent1.y = -axis.x;
+				outTangent1.z = 0;
+			}
+			else
+			{
+				outTangent1.x = 0;
+				outTangent1.y = axis.z;
+				outTangent1.z = -axis.y;
+			}
+
+			outTangent2 = axis.cross(outTangent1);
+		}
+
 		static void nearestOnSegments(const Vec3 &a0, const Vec3 &a1, const Vec3 &b0, const Vec3 &b1, Vec3 &outA, Vec3 &outB);
 		static void nearestOnRaySegment(const Vec3 &r0, const Vec3 &n, const Vec3 &c0, const Vec3 &c1, Vec3 &outA, Vec3 &outB);
 		
