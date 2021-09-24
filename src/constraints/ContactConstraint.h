@@ -20,7 +20,7 @@ namespace Positional
 			Float restitution;
 			ContactPoint contact;
 			Float force;
-			Vec3 prevVelocity;
+			Vec3 preVelocity;
 
 			Data() = default;
 			void init(const Store<Collider>::Ref &_colliderA, const Store<Collider>::Ref &_colliderB);

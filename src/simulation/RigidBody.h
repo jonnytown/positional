@@ -20,7 +20,7 @@ namespace Positional
 		static void differentiate(Body &body, const Float &dtInv)
 		{
 			body.frame.velocity = (body.frame.position - body.prevFrame.position) * dtInv;
-			const Quat dq = body.frame.rotation * body.prevFrame.rotation.conjugate();
+			const Quat dq = body.frame.rotation * body.prevFrame.rotation.inverse();
 			const Float dtInv2 = 2 * dtInv;
 			body.frame.angularVelocity = dq.w >= 0 ?
 				Vec3(dq.x * dtInv2, dq.y * dtInv2, dq.z * dtInv2) :

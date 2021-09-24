@@ -14,9 +14,9 @@ namespace Positional
 		Vec3 (*m_inverseRotate)(const Pose &, const Vec3 &);
 
 		inline static Vec3 transformNonlinear(const Pose &t, const Vec3 &point) { return t.position + t.rotation * point; }
-		inline static Vec3 inverseTransformNonlinear(const Pose &t, const Vec3 &point) { return t.rotation.conjugate() * (point - t.position); }
+		inline static Vec3 inverseTransformNonlinear(const Pose &t, const Vec3 &point) { return t.rotation.inverse() * (point - t.position); }
 		inline static Vec3 rotateNonlinear(const Pose &t, const Vec3 &vector) { return t.rotation * vector; }
-		inline static Vec3 inverseRotateNonlinear(const Pose &t, const Vec3 &vector) { return t.rotation.conjugate() * vector; }
+		inline static Vec3 inverseRotateNonlinear(const Pose &t, const Vec3 &vector) { return t.rotation.inverse() * vector; }
 
 		inline static Vec3 transformLinear(const Pose &t, const Vec3 &point) { return t.position + point; }
 		inline static Vec3 inverseTransformLinear(const Pose &t, const Vec3 &point) { return point - t.position; }

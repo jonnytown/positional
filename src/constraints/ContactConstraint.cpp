@@ -52,7 +52,7 @@ namespace Positional
 
 		if (constraint.bodyB.valid() && posB.has_value())
 		{
-			const Body &b = constraint.bodyA.get();
+			const Body &b = constraint.bodyB.get();
 			velocity = velocity - b.frame.getVelocityAt(b.massPose.position, posB.value());
 		}
 
@@ -79,7 +79,7 @@ namespace Positional
 		optional<Vec3> posA, posB, comA, comB;
 		Vec3 prevA, prevB;
 		getWorldContacts(constraint, prevA, posA, prevB, posB);
-		d->prevVelocity = getVelocity(constraint, posA, posB);
+		d->preVelocity = getVelocity(constraint, posA, posB);
 
 		// penetration
 		Float lambdaN;
@@ -114,17 +114,10 @@ namespace Positional
 			optional<World *> world = constraint.getWorld();
 			assert(world.has_value());
 
+			Vec3 v;
+			Float vn;
 			optional<Vec3> posA, posB;
 			getWorldContacts(constraint, posA, posB);
-
-			// restitution
-			Vec3 v = getVelocity(constraint, posA, posB);
-			Float vn = d->contact.normal.dot(v);
-
-			const Float prevVn = d->contact.normal.dot(d->prevVelocity);
-			const Float e = Math::abs(vn) < 2.0 * dt * world.value()->gravity.length() ? 0 : d->restitution;
-			const Vec3 restitution = d->contact.normal * (-vn + Math::max(-e * prevVn, 0));
-			constraint.applyCorrections(restitution, 0, dtInvSq, true, posA, posB);
 
 			// dynamic friction
 			v = getVelocity(constraint, posA, posB);
@@ -136,7 +129,14 @@ namespace Positional
 
 			constraint.applyCorrections(dynamicFriction, 0, dtInvSq, true, posA, posB);
 
-			
+			// restitution
+			v = getVelocity(constraint, posA, posB);
+			vn = d->contact.normal.dot(v);
+
+			const Float prevVn = d->contact.normal.dot(d->preVelocity);
+			const Float e = Math::abs(vn) < 2.0 * dt * world.value()->gravity.length() ? 0 : d->restitution;
+			const Vec3 restitution = d->contact.normal * (-vn + Math::max(-e * prevVn, 0));
+			constraint.applyCorrections(restitution, 0, dtInvSq, true, posA, posB);
 		}
 	}
 #pragma optimize("", on)
