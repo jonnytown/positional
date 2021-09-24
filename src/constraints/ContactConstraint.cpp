@@ -58,6 +58,24 @@ namespace Positional
 
 		return velocity;
 	}
+
+	inline Vec3 getPreVelocity(const Constraint& constraint, const optional<Vec3>& posA, const optional<Vec3>& posB)
+	{
+		Vec3 velocity(0);
+		if (constraint.bodyA.valid() && posA.has_value())
+		{
+			const Body& a = constraint.bodyA.get();
+			velocity = a.prevFrame.getVelocityAt(a.massPose.position, posA.value());
+		}
+
+		if (constraint.bodyB.valid() && posB.has_value())
+		{
+			const Body& b = constraint.bodyB.get();
+			velocity = velocity - b.prevFrame.getVelocityAt(b.massPose.position, posB.value());
+		}
+
+		return velocity;
+	}
 #pragma optimize("", off)
 	void ContactConstraint::solvePositions(Constraint &constraint, const Float &dtInvSq)
 	{
@@ -78,8 +96,7 @@ namespace Positional
 
 		optional<Vec3> posA, posB, comA, comB;
 		Vec3 prevA, prevB;
-		getWorldContacts(constraint, prevA, posA, prevB, posB);
-		d->preVelocity = getVelocity(constraint, posA, posB);
+		getWorldContacts(constraint, prevA, posA, prevB, posB);;
 
 		// penetration
 		Float lambdaN;
@@ -119,6 +136,16 @@ namespace Positional
 			optional<Vec3> posA, posB;
 			getWorldContacts(constraint, posA, posB);
 
+			// restitution
+			v = getVelocity(constraint, posA, posB);
+			vn = d->contact.normal.dot(v);
+			const Vec3 preVel = getPreVelocity(constraint, posA, posB);
+
+			const Float preVn = d->contact.normal.dot(preVel);
+			const Float e = Math::abs(vn) < 2.0 * dt * world.value()->gravity.length() ? 0 : d->restitution;
+			const Vec3 restitution = d->contact.normal * (-vn + Math::max(-e * preVn, 0));
+			constraint.applyCorrections(restitution, 0, dtInvSq, true, posA, posB);
+
 			// dynamic friction
 			v = getVelocity(constraint, posA, posB);
 			vn = d->contact.normal.dot(v);
@@ -129,14 +156,7 @@ namespace Positional
 
 			constraint.applyCorrections(dynamicFriction, 0, dtInvSq, true, posA, posB);
 
-			// restitution
-			v = getVelocity(constraint, posA, posB);
-			vn = d->contact.normal.dot(v);
-
-			const Float prevVn = d->contact.normal.dot(d->preVelocity);
-			const Float e = Math::abs(vn) < 2.0 * dt * world.value()->gravity.length() ? 0 : d->restitution;
-			const Vec3 restitution = d->contact.normal * (-vn + Math::max(-e * prevVn, 0));
-			constraint.applyCorrections(restitution, 0, dtInvSq, true, posA, posB);
+			
 		}
 	}
 #pragma optimize("", on)
