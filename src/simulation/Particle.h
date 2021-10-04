@@ -11,13 +11,13 @@ namespace Positional
 		static void integrate(Body &body, const Float &dt, const Vec3 &gravity)
 		{
 			// TODO: apply all external forces
-			body.frame.velocity = body.frame.velocity + dt * gravity;
-			body.frame.position = body.frame.position + dt * body.frame.velocity;
+			body.velocity.linear = body.velocity.linear + dt * gravity;
+			body.pose.position = body.pose.position + dt * body.velocity.linear;
 		}
 
 		static void differentiate(Body &body, const Float &dtInv)
 		{
-			body.frame.velocity = (body.frame.position - body.prevFrame.position) * dtInv;
+			body.velocity.linear = (body.pose.position - body.prePose.position) * dtInv;
 		}
 
 		static bool hasRotation() { return false; }

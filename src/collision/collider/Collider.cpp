@@ -9,7 +9,7 @@ namespace Positional
 		Vec3 bodySpace = pose.transform(point);
 		if (m_body.valid())
 		{
-			return m_body.get().frame.transform(bodySpace);
+			return m_body.get().pose.transform(bodySpace);
 		}
 		return bodySpace;
 	}
@@ -19,20 +19,20 @@ namespace Positional
 		Vec3 bodySpace = pose.rotate(vector);
 		if (m_body.valid())
 		{
-			return m_body.get().frame.rotate(bodySpace);
+			return m_body.get().pose.rotate(bodySpace);
 		}
 		return bodySpace;
 	}
 
 	Vec3 Collider::pointToLocal(const Vec3 &point) const
 	{
-		Vec3 bodySpace = m_body.valid() ? m_body.get().frame.inverseTransform(point) : point;
+		Vec3 bodySpace = m_body.valid() ? m_body.get().pose.inverseTransform(point) : point;
 		return pose.inverseTransform(bodySpace);
 	}
 
 	Vec3 Collider::vectorToLocal(const Vec3 &vector) const
 	{
-		Vec3 bodySpace = m_body.valid() ? m_body.get().frame.inverseRotate(vector) : vector;
+		Vec3 bodySpace = m_body.valid() ? m_body.get().pose.inverseRotate(vector) : vector;
 		return pose.inverseRotate(bodySpace);
 	}
 }

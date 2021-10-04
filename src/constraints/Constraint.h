@@ -125,13 +125,13 @@ namespace Positional
 			if (bodyB.valid())
 			{
 				const Body& body = bodyB.get();
-				vel = body.frame.getVelocityAt(body.massPose.position, posB);
+				vel = body.getVelocityAt(posB);
 			}
 
 			if (bodyA.valid())
 			{
 				const Body& body = bodyA.get();
-				vel = vel - body.frame.getVelocityAt(body.massPose.position, posA);
+				vel = vel - body.getVelocityAt(posA);
 			}
 			vel = vel * Math::min(damping * dt, 1);
 			applyCorrections(vel, 0, dtInvSq, true, optional<Vec3>(posA), optional<Vec3>(posB));
@@ -142,12 +142,12 @@ namespace Positional
 			Vec3 omega(0);
 			if (bodyB.valid())
 			{
-				omega = bodyB.get().frame.angularVelocity;
+				omega = bodyB.get().velocity.angular;
 			}
 
 			if (bodyA.valid())
 			{
-				omega = omega - bodyA.get().frame.angularVelocity;
+				omega = omega - bodyA.get().velocity.angular;
 			}
 
 			omega = omega * Math::min(damping * dt, 1.0);

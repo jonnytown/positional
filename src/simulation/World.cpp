@@ -243,7 +243,7 @@ namespace Positional
 			{
 				m_contacts[i].solvePositions(hInvSq);
 			}
-
+			
 			// differentiate
 			for (UInt32 i = 0, count = m_bodies.count(); i < count; ++i)
 			{

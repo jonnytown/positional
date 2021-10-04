@@ -203,7 +203,6 @@ namespace Positional::Mass
 			m_com = com;
 		}
 
-#pragma optimize("", off)
 		bool diagonalize(Vec3 &outDiagTensor, Quat &outTensorRot, Vec3 &outCOM, Float &outMass)
 		{
 			// The inertia tensor and center of mass is relative to the actor at this point. Transform to the
@@ -226,7 +225,7 @@ namespace Positional::Mass
 
 			return false;
 		}
-#pragma optimize("", on)
+
 		void setBox(const Vec3 &extents, const Float &density)
 		{
 			assert (extents.x > 0 && extents.y > 0 && extents.z > 0);

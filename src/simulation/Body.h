@@ -6,7 +6,8 @@
 #include <unordered_set>
 #include <optional>
 #include "data/Store.h"
-#include "Frame.h"
+#include "Pose.h"
+#include "VelocityPose.h"
 
 using namespace std;
 namespace Positional
@@ -35,15 +36,17 @@ namespace Positional
 			m_world(world),
 			m_integrate(integrate),
 			m_differentiate(differentiate),
-			frame(position, rotation, hasRotation),
-			prevFrame(hasRotation),
+			pose(position, rotation, hasRotation),
+			prePose(hasRotation),
 			massPose(hasRotation),
 			invMass(0),
 			invInertia(0) {}
 	public:
 		// position
-		Frame frame;
-		Frame prevFrame;
+		Pose pose;
+		Pose prePose;
+		VelocityPose velocity;
+		VelocityPose preVelocity;
 
 		// mass
 		Pose massPose;
@@ -55,14 +58,28 @@ namespace Positional
 
 		inline void integrate(const Float &dt, const Vec3 &gravity)
 		{
-			prevFrame = frame;
+			prePose = pose;
 			m_integrate(*this, dt, gravity);
 		}
-		inline void differentiate(const Float &dtInv) { m_differentiate(*this, dtInv); }
+		inline void differentiate(const Float &dtInv)
+		{
+			preVelocity = velocity;
+			m_differentiate(*this, dtInv);
+		}
 		/*
 		 * return inverse mass scaler at normal and optional point in world space
 		 */
 		Float getInverseMass(const Vec3 &normal, const optional<Vec3> &pos = std::nullopt);
+
+		inline Vec3 getVelocityAt(const Vec3 &point) const
+		{
+			return velocity.linear - (point - pose.transform(massPose.position)).cross(velocity.angular);
+		}
+
+		inline Vec3 getPreVelocityAt(const Vec3 &point) const
+		{
+			return preVelocity.linear - (point - pose.transform(massPose.position)).cross(preVelocity.angular);
+		}
 
 		/*
 		 * applies a rotation around the center of mass
@@ -86,7 +103,7 @@ namespace Positional
 		{
 			if (body.valid())
 			{
-				return body.get().frame.transform(point);
+				return body.get().pose.transform(point);
 			}
 			return point;
 		}
@@ -96,7 +113,7 @@ namespace Positional
 			if (body.valid())
 			{
 				const Body& b = body.get();
-				return b.frame.transform(b.massPose.position);
+				return b.pose.transform(b.massPose.position);
 			}
 			return Vec3::zero;
 		}
@@ -106,8 +123,8 @@ namespace Positional
 			if (body.valid())
 			{
 				const Body &b = body.get();
-				outPrev = b.prevFrame.transform(point);
-				outCurr = b.frame.transform(point);
+				outPrev = b.prePose.transform(point);
+				outCurr = b.pose.transform(point);
 				return;
 			}
 			outPrev = outCurr = point;
@@ -117,7 +134,7 @@ namespace Positional
 		{
 			if (body.valid())
 			{
-				return body.get().frame.inverseTransform(point);
+				return body.get().pose.inverseTransform(point);
 			}
 			return point;
 		}

@@ -44,34 +44,34 @@ namespace Positional
 	inline Vec3 getVelocity(const Constraint& constraint, const optional<Vec3>& posA, const optional<Vec3>& posB)
 	{
 		Vec3 velocity(0);
-		if (constraint.bodyA.valid() && posA.has_value())
+		if (constraint.bodyA.valid())
 		{
 			const Body &a = constraint.bodyA.get();
-			velocity = a.frame.getVelocityAt(a.massPose.position, posA.value());
+			velocity = a.getVelocityAt( posA.value());
 		}
 
 		if (constraint.bodyB.valid() && posB.has_value())
 		{
 			const Body &b = constraint.bodyB.get();
-			velocity = velocity - b.frame.getVelocityAt(b.massPose.position, posB.value());
+			velocity = velocity - b.getVelocityAt(posB.value());
 		}
 
 		return velocity;
 	}
 
-	inline Vec3 getPreVelocity(const Constraint& constraint, const optional<Vec3>& posA, const optional<Vec3>& posB)
+	inline Vec3 getPreVelocity(const Constraint &constraint, const optional<Vec3> &posA, const optional<Vec3> &posB)
 	{
 		Vec3 velocity(0);
-		if (constraint.bodyA.valid() && posA.has_value())
+		if (constraint.bodyA.valid())
 		{
-			const Body& a = constraint.bodyA.get();
-			velocity = a.prevFrame.getVelocityAt(a.massPose.position, posA.value());
+			const Body &a = constraint.bodyA.get();
+			velocity = a.getPreVelocityAt(posA.value());
 		}
 
 		if (constraint.bodyB.valid() && posB.has_value())
 		{
-			const Body& b = constraint.bodyB.get();
-			velocity = velocity - b.prevFrame.getVelocityAt(b.massPose.position, posB.value());
+			const Body &b = constraint.bodyB.get();
+			velocity = velocity - b.getPreVelocityAt(posB.value());
 		}
 
 		return velocity;
@@ -154,9 +154,7 @@ namespace Positional
 			const Float vtLen = vt.length();
 			const Vec3 dynamicFriction = (vt / -vtLen) * Math::min(dt * d->dynamicFriction * d->force, vtLen);
 
-			constraint.applyCorrections(dynamicFriction, 0, dtInvSq, true, posA, posB);
-
-			
+			constraint.applyCorrections(dynamicFriction, 0, dtInvSq, true, posA, posB);			
 		}
 	}
 #pragma optimize("", on)

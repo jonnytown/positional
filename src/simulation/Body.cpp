@@ -39,22 +39,22 @@ namespace Positional
 		Float w = 0;
 		if (pos.has_value())
 		{
-			n = (pos.value() - frame.transform(massPose.position)).cross(normal);
+			n = (pos.value() - pose.transform(massPose.position)).cross(normal.normalized());
 			w = invMass;
 		}
 		else
 		{
-			n = normal;
+			n = normal.normalized();
 		}
 
-		n = massPose.inverseRotate(frame.inverseRotate(n));
+		n = massPose.inverseRotate(pose.inverseRotate(n));
 		w += n.x * n.x * invInertia.x +
 			 n.y * n.y * invInertia.y +
 			 n.z * n.z * invInertia.z;
 
 		return w;
 	}
-
+#pragma optimize("", off)
 	void Body::applyRotation(const Vec3 &rot, const Float &scale)
 	{
 		// clamp max rotations per substep
@@ -66,20 +66,20 @@ namespace Positional
 			qh = maxPhi / phi;
 		}
 
-		const Vec3 worldCOM = frame.transform(massPose.position);
+		const Vec3 worldCOM = pose.transform(massPose.position);
 
 		// delta rotation
 		Quat dq = Quat(rot.x * qh, rot.y * qh, rot.z * qh, 0);
-		dq = dq * frame.rotation;
-		frame.rotation = Quat(
-			frame.rotation.x + 0.5 * dq.x,
-			frame.rotation.y + 0.5 * dq.y,
-			frame.rotation.z + 0.5 * dq.z,
-			frame.rotation.w + 0.5 * dq.w
+		dq = dq * pose.rotation;
+		pose.rotation = Quat(
+			pose.rotation.x + 0.5 * dq.x,
+			pose.rotation.y + 0.5 * dq.y,
+			pose.rotation.z + 0.5 * dq.z,
+			pose.rotation.w + 0.5 * dq.w
 		).normalize();
 
 		// maintain center of mass position in world space
-		frame.position = frame.position + (worldCOM - frame.transform(massPose.position));
+		pose.position = pose.position + (worldCOM - pose.transform(massPose.position));
 	}
 
 	void Body::applyCorrection(const Vec3 &correction, const optional<Vec3> &pos, const bool &velLevel)
@@ -89,33 +89,39 @@ namespace Positional
 		{
 			if (velLevel)
 			{
-				frame.velocity = frame.velocity + correction * invMass;
+				velocity.linear = velocity.linear + correction * invMass;
 			}
 			else
 			{
-				frame.position = frame.position + correction * invMass;
+				pose.position = pose.position + correction * invMass;
 			}
 
-			dq = (pos.value() - frame.transform(massPose.position)).cross(correction);
+			dq = (pos.value() - pose.transform(massPose.position)).cross(correction);
 		}
 		else
 		{
 			dq = correction;
 		}
 
-		dq = massPose.inverseRotate(frame.inverseRotate(dq));
+		//const Vec3 I = pose.rotate(massPose.rotate(invInertia));
+		//dq.x *= I.x;
+		//dq.y *= I.y;
+		//dq.z *= I.z;
+
+		dq = massPose.inverseRotate(pose.inverseRotate(dq));
 		dq.x *= invInertia.x;
 		dq.y *= invInertia.y;
 		dq.z *= invInertia.z;
-		dq = frame.rotate(massPose.rotate(dq));
+		dq = pose.rotate(massPose.rotate(dq));
 
 		if (velLevel)
 		{
-			frame.angularVelocity = frame.angularVelocity + dq;
+			velocity.angular = velocity.angular + dq;
 		}
 		else
 		{
 			applyRotation(dq);
 		}
 	}
+#pragma optimize("", on)
 }

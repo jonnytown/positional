@@ -83,7 +83,7 @@ namespace Positional
 			return Quat(-x * invNorm, -y * invNorm, -z * invNorm, w * invNorm);
 		}
 
-		inline Float dot(const Quat &rhs) {
+		inline Float dot(const Quat &rhs) const {
 			return x * rhs.x + y * rhs.y + z * rhs.z + w *rhs.w;
 		}
 

@@ -47,7 +47,7 @@ namespace Positional::Collision
 		{
 			const Collider &collider = node.collider.get();
 			const Bounds &bounds = collider.bounds();
-			const Bounds predictedBounds = Bounds(bounds.center + m_padFactor * dt * collider.body().get().frame.velocity, bounds.extents());
+			const Bounds predictedBounds = Bounds(bounds.center + m_padFactor * dt * collider.body().get().velocity.linear, bounds.extents());
 
 			if (!node.treeBounds.contains(predictedBounds))
 			{
