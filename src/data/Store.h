@@ -10,22 +10,14 @@ using namespace std;
 
 namespace Positional
 {
+	template <typename>
+	struct Handle;
+
 	template <typename T>
 	struct Store
 	{
 		template <typename>
 		friend struct Ref;
-
-		struct Handle
-		{
-			friend struct Ref<T>;
-
-			UInt64 id;
-			UInt64 index;
-			Store *store;
-
-			Handle(const UInt64 &_id, const UInt64 &_index, Store *_store) : id(_id), index(_index), store(_store) {}
-		};
 
 		Store() : m_nextId(0) {}
 
@@ -50,7 +42,7 @@ namespace Positional
 			auto id = m_nextId++;
 			auto idx = m_data.size() - 1;
 
-			auto ref = make_shared<Handle>(id, idx, this);
+			auto ref = make_shared<Handle<T>>(id, idx, this);
 			m_refs.insert_or_assign(id, ref);
 
 			return Ref<T>(ref);
@@ -106,8 +98,18 @@ namespace Positional
 
 	private:
 		UInt64 m_nextId;
-		unordered_map<UInt64, shared_ptr<Handle>> m_refs;
+		unordered_map<UInt64, shared_ptr<Handle<T>>> m_refs;
 		vector<T> m_data;
+	};
+
+	template <typename T>
+	struct Handle
+	{
+		UInt64 id;
+		UInt64 index;
+		Store<T> *store;
+
+		Handle(const UInt64 &_id, const UInt64 &_index, Store<T> *_store) : id(_id), index(_index), store(_store) {}
 	};
 
 	template <typename T>
@@ -168,12 +170,12 @@ namespace Positional
 		}
 
 	private:
-		Ref(shared_ptr<Store<T>::Handle> ref)
+		Ref(shared_ptr<Handle<T>> ref)
 		{
-			m_ptr = weak_ptr<Store<T>::Handle>(ref);
+			m_ptr = weak_ptr<Handle<T>>(ref);
 		}
 
-		weak_ptr<Store<T>::Handle> m_ptr;
+		weak_ptr<Handle<T>> m_ptr;
 	};
 }
 #endif // STORE_H
