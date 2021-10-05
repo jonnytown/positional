@@ -19,14 +19,14 @@ namespace Positional::Collision
 		class Node
 		{
 		public:
-			Store<Collider>::Ref collider;
+			Ref<Collider> collider;
 			Bounds treeBounds;
 
 			Node() :
-				collider(Store<Collider>::Ref()),
+				collider(Ref<Collider>()),
 				treeBounds(Bounds(Vec3::zero, Vec3::zero)) {}
 
-			Node(Store<Collider>::Ref _collider, const Bounds &_treeBounds) :
+			Node(Ref<Collider> _collider, const Bounds &_treeBounds) :
 				collider(_collider),
 				treeBounds(_treeBounds) {}
 		};
@@ -37,21 +37,21 @@ namespace Positional::Collision
 		unordered_map<UInt32, Node> m_staticNodes;
 		Float m_padFactor;
 
-		UInt32 Find(const unordered_map<UInt32, Node> &nodeMap, const Store<Collider>::Ref &collider) const;
+		UInt32 Find(const unordered_map<UInt32, Node> &nodeMap, const Ref<Collider> &collider) const;
 
 	public:
 		DBTBroadphase(const Float &padFactor = 2.0) : m_padFactor(padFactor) {}
 		~DBTBroadphase() {}
 
 #pragma region ABroadphase Interface
-		virtual void add(const Store<Collider>::Ref &collider) override;
-		virtual void addStatic(const Store<Collider>::Ref &collider) override;
-		virtual void remove(const Store<Collider>::Ref &collider) override;
-		virtual void removeStatic(const Store<Collider>::Ref &collider) override;
+		virtual void add(const Ref<Collider> &collider) override;
+		virtual void addStatic(const Ref<Collider> &collider) override;
+		virtual void remove(const Ref<Collider> &collider) override;
+		virtual void removeStatic(const Ref<Collider> &collider) override;
 		virtual void update(const Float &dt) override;
 
-		virtual void raycast(const Ray &ray, const Float &maxDistance, const UInt32 &mask, vector<Store<Collider>::Ref> &results) const override;
-		virtual void forEachOverlapPair(const function<void(pair<Store<Collider>::Ref, Store<Collider>::Ref>)> &callback) const override;
+		virtual void raycast(const Ray &ray, const Float &maxDistance, const UInt32 &mask, vector<Ref<Collider>> &results) const override;
+		virtual void forEachOverlapPair(const function<void(pair<Ref<Collider>, Ref<Collider>>)> &callback) const override;
 #pragma endregion ABroadphase Interface
 
 		void forEachNode(const function<void(Bounds)> &callback)

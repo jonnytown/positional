@@ -15,8 +15,8 @@ namespace Positional
 		void (*m_solveVelocities)(Constraint &, const Float &, const Float &);
 
 	public:
-		Store<Body>::Ref bodyA;
-		Store<Body>::Ref bodyB;
+		Ref<Body> bodyA;
+		Ref<Body> bodyB;
 		shared_ptr<void> data;
 
 		void solvePositions(const Float &dtInvSq)
@@ -43,7 +43,7 @@ namespace Positional
 		}
 
 		template <class ConstraintT, class DataT, class... DataArgs>
-		void init(const Store<Body>::Ref &first, const Store<Body>::Ref &second, DataArgs &&...dataArgs)
+		void init(const Ref<Body> &first, const Ref<Body> &second, DataArgs &&...dataArgs)
 		{
 			bodyA = first;
 			bodyB = second;

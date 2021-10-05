@@ -16,14 +16,14 @@ namespace Positional::Collision
 	{
 	public:
 		virtual ~ABroadphase() {};
-		virtual void add(const Store<Collider>::Ref &collider) = 0;
-		virtual void addStatic(const Store<Collider>::Ref &collider) = 0;
-		virtual void remove(const Store<Collider>::Ref &collider) = 0;
-		virtual void removeStatic(const Store<Collider>::Ref &collider) = 0;
+		virtual void add(const Ref<Collider> &collider) = 0;
+		virtual void addStatic(const Ref<Collider> &collider) = 0;
+		virtual void remove(const Ref<Collider> &collider) = 0;
+		virtual void removeStatic(const Ref<Collider> &collider) = 0;
 		virtual void update(const Float &dt) = 0;
 
-		virtual void raycast(const Ray &ray, const Float &maxDistance, const UInt32 &mask, vector<Store<Collider>::Ref> &results) const = 0;
-		virtual void forEachOverlapPair(const function<void(pair<Store<Collider>::Ref, Store<Collider>::Ref>)> &callback) const = 0;
+		virtual void raycast(const Ray &ray, const Float &maxDistance, const UInt32 &mask, vector<Ref<Collider>> &results) const = 0;
+		virtual void forEachOverlapPair(const function<void(pair<Ref<Collider>, Ref<Collider>>)> &callback) const = 0;
 	};
 }
 #endif // ABROADPHASE_H

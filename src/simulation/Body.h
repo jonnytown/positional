@@ -20,7 +20,7 @@ namespace Positional
 		friend class World;
 	private:
 		optional<World *> m_world;
-		vector<Store<Collider>::Ref> m_colliders;
+		vector<Ref<Collider>> m_colliders;
 
 		void (*m_integrate)(Body &, const Float &, const Vec3 &);
 		void (*m_differentiate)(Body &, const Float &);
@@ -54,7 +54,7 @@ namespace Positional
 		Vec3 invInertia;
 
 		const std::optional<World *> &world() const { return m_world; };
-		const std::vector<Store<Collider>::Ref> &colliders() const { return m_colliders; }
+		const std::vector<Ref<Collider>> &colliders() const { return m_colliders; }
 
 		inline void integrate(const Float &dt, const Vec3 &gravity)
 		{
@@ -99,7 +99,7 @@ namespace Positional
 			return Body(world, position, rotation, T::hasRotation(), T::integrate, T::differentiate);
 		}
 
-		static inline Vec3 pointToWorld(const Store<Body>::Ref &body, const Vec3 &point)
+		static inline Vec3 pointToWorld(const Ref<Body> &body, const Vec3 &point)
 		{
 			if (body.valid())
 			{
@@ -108,7 +108,7 @@ namespace Positional
 			return point;
 		}
 
-		static inline Vec3 worldCom(const Store<Body>::Ref& body)
+		static inline Vec3 worldCom(const Ref<Body>& body)
 		{
 			if (body.valid())
 			{
@@ -118,7 +118,7 @@ namespace Positional
 			return Vec3::zero;
 		}
 
-		static inline void pointsToWorld(const Store<Body>::Ref &body, const Vec3 &point, Vec3 &outPrev, Vec3 &outCurr)
+		static inline void pointsToWorld(const Ref<Body> &body, const Vec3 &point, Vec3 &outPrev, Vec3 &outCurr)
 		{
 			if (body.valid())
 			{
@@ -130,7 +130,7 @@ namespace Positional
 			outPrev = outCurr = point;
 		}
 
-		static inline Vec3 pointToLocal(const Store<Body>::Ref &body, const Vec3 &point)
+		static inline Vec3 pointToLocal(const Ref<Body> &body, const Vec3 &point)
 		{
 			if (body.valid())
 			{
@@ -139,7 +139,7 @@ namespace Positional
 			return point;
 		}
 
-		static const Store<Body>::Ref null;
+		static const Ref<Body> null;
 	};
 }
 #endif // BODY_H

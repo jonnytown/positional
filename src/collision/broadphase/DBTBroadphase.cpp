@@ -4,7 +4,7 @@
 namespace Positional::Collision
 {
 #pragma region ABroadphase Interface
-	void DBTBroadphase::add(const Store<Collider>::Ref &ref)
+	void DBTBroadphase::add(const Ref<Collider> &ref)
 	{
 		const Collider &collider = ref.get();
 		const Bounds &bounds = collider.bounds();
@@ -13,7 +13,7 @@ namespace Positional::Collision
 		m_dynamicNodes[handle] = Node(ref, treeBounds);
 	}
 
-	void DBTBroadphase::addStatic(const Store<Collider>::Ref &ref)
+	void DBTBroadphase::addStatic(const Ref<Collider> &ref)
 	{
 		const Collider &collider = ref.get();
 		const Bounds &bounds = collider.bounds();
@@ -21,7 +21,7 @@ namespace Positional::Collision
 		m_staticNodes[handle] = Node(ref, bounds);
 	}
 
-	void DBTBroadphase::remove(const Store<Collider>::Ref &ref)
+	void DBTBroadphase::remove(const Ref<Collider> &ref)
 	{
 		UInt32 handle = Find(m_dynamicNodes, ref);
 		if (handle != NOT_FOUND)
@@ -31,7 +31,7 @@ namespace Positional::Collision
 		}
 	}
 
-	void DBTBroadphase::removeStatic(const Store<Collider>::Ref &ref)
+	void DBTBroadphase::removeStatic(const Ref<Collider> &ref)
 	{
 		UInt32 handle = Find(m_staticNodes, ref);
 		if (handle != NOT_FOUND)
@@ -71,7 +71,7 @@ namespace Positional::Collision
 		}
 	}
 
-	void DBTBroadphase::raycast(const Ray &ray, const Float &maxDistance, const UInt32 &mask, vector<Store<Collider>::Ref> &results) const
+	void DBTBroadphase::raycast(const Ray &ray, const Float &maxDistance, const UInt32 &mask, vector<Ref<Collider>> &results) const
 	{
 		m_dynamicTree.raycast(
 			ray,
@@ -94,7 +94,7 @@ namespace Positional::Collision
 			});
 	}
 
-	void DBTBroadphase::forEachOverlapPair(const function<void(pair<Store<Collider>::Ref, Store<Collider>::Ref>)> &callback) const
+	void DBTBroadphase::forEachOverlapPair(const function<void(pair<Ref<Collider>, Ref<Collider>>)> &callback) const
 	{
 		m_dynamicTree.forEachOverlapPair(
 			[&, this](const auto &pair)
@@ -124,7 +124,7 @@ namespace Positional::Collision
 		}
 	}
 
-	UInt32 DBTBroadphase::Find(const unordered_map<UInt32, Node> &nodeMap, const Store<Collider>::Ref &collider) const
+	UInt32 DBTBroadphase::Find(const unordered_map<UInt32, Node> &nodeMap, const Ref<Collider> &collider) const
 	{
 		for (const auto &[key, node] : nodeMap)
 		{

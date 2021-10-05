@@ -5,7 +5,7 @@
 
 namespace Positional
 {
-	void ContactConstraint::Data::init(const Store<Collider>::Ref &_colliderA, const Store<Collider>::Ref &_colliderB)
+	void ContactConstraint::Data::init(const Ref<Collider> &_colliderA, const Ref<Collider> &_colliderB)
 	{
 		colliderA = _colliderA;
 		colliderB = _colliderB;
@@ -22,14 +22,14 @@ namespace Positional
 		force = 0;
 	}
 
-	inline void getWorldContacts(const Constraint &constraint, optional<Vec3> &posA, optional<Vec3> &posB)
+	inline void getContacts(const Constraint &constraint, optional<Vec3> &posA, optional<Vec3> &posB)
 	{
 		auto d = constraint.getData<ContactConstraint::Data>();
 		posA.emplace(Body::pointToWorld(constraint.bodyA, d->contact.pointA));
 		posB.emplace(Body::pointToWorld(constraint.bodyB, d->contact.pointB));
 	}
 
-	inline void getWorldContacts(const Constraint &constraint, Vec3 &prevA, optional<Vec3> &posA, Vec3 &prevB, optional<Vec3> &posB)
+	inline void getContacts(const Constraint &constraint, Vec3 &prevA, optional<Vec3> &posA, Vec3 &prevB, optional<Vec3> &posB)
 	{
 		auto d = constraint.getData<ContactConstraint::Data>();
 
@@ -96,7 +96,7 @@ namespace Positional
 
 		optional<Vec3> posA, posB, comA, comB;
 		Vec3 prevA, prevB;
-		getWorldContacts(constraint, prevA, posA, prevB, posB);;
+		getContacts(constraint, prevA, posA, prevB, posB);;
 
 		// penetration
 		Float lambdaN;
@@ -108,7 +108,7 @@ namespace Positional
 		}
 
 		// static friction
-		getWorldContacts(constraint, posA, posB);
+		getContacts(constraint, posA, posB);
 
 		const Vec3 dp = (posB.value() - prevB) - (posA.value() - prevA);
 		const Vec3 dpTan = dp - contact.normal * dp.dot(contact.normal);
@@ -134,7 +134,7 @@ namespace Positional
 			Vec3 v;
 			Float vn;
 			optional<Vec3> posA, posB;
-			getWorldContacts(constraint, posA, posB);
+			getContacts(constraint, posA, posB);
 
 			// restitution
 			v = getVelocity(constraint, posA, posB);

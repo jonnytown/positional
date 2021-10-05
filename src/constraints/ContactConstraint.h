@@ -12,8 +12,8 @@ namespace Positional
 	{
 		struct Data
 		{
-			Store<Collider>::Ref colliderA;
-			Store<Collider>::Ref colliderB;
+			Ref<Collider> colliderA;
+			Ref<Collider> colliderB;
 			bool colliding;
 			Float staticFriction;
 			Float dynamicFriction;
@@ -22,7 +22,7 @@ namespace Positional
 			Float force;
 
 			Data() = default;
-			void init(const Store<Collider>::Ref &_colliderA, const Store<Collider>::Ref &_colliderB);
+			void init(const Ref<Collider> &_colliderA, const Ref<Collider> &_colliderB);
 		};
 
 		static void solvePositions(Constraint &constraint, const Float &dtInvSq);

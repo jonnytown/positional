@@ -4,7 +4,7 @@
 
 namespace Positional
 {
-	const Store<Body>::Ref Body::null = Store<Body>::Ref();
+	const Ref<Body> Body::null = Ref<Body>();
 #pragma optimize("", off)
 	void Body::updateMass()
 	{

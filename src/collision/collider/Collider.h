@@ -67,7 +67,7 @@ namespace Positional
 	struct Collider final
 	{
 	private:
-		Store<Body>::Ref m_body;
+		Ref<Body> m_body;
 		bool m_isStatic;
 		UInt8 m_shapeId;
 		Bounds(*m_bounds)(const Collider &);
@@ -77,7 +77,7 @@ namespace Positional
 		void(*m_computeMass)(const Collider &, Mass::Computer &);
 
 		Collider(
-			const Store<Body>::Ref& body,
+			const Ref<Body>& body,
 			const UInt8& shapeId,
 			const Shape& _shape,
 			const Vec3& position,
@@ -120,7 +120,7 @@ namespace Positional
 		Float dynamicFriction;
 		Float restitution;
 
-		Store<Body>::Ref body() const { return m_body; };
+		Ref<Body> body() const { return m_body; };
 
 		bool isStatic() const { return m_isStatic; }
 
@@ -167,7 +167,7 @@ namespace Positional
 		Vec3 vectorToLocal(const Vec3 &vector) const;
 
 		template <typename T>
-		inline static Collider create(const Store<Body>::Ref &body, const Vec3 &position, const Quat &rotation, const Shape &shape, const Float &density, const Float &staticFriction, const Float &dynamicFriction, const Float &bounciness)
+		inline static Collider create(const Ref<Body> &body, const Vec3 &position, const Quat &rotation, const Shape &shape, const Float &density, const Float &staticFriction, const Float &dynamicFriction, const Float &bounciness)
 		{			
 			return Collider(
 				body,

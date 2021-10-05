@@ -12,11 +12,11 @@ namespace Positional
 {
 	struct CollisionResult
 	{
-		Store<Collider>::Ref first;
-		Store<Collider>::Ref second;
+		Ref<Collider> first;
+		Ref<Collider> second;
 		ContactPoint contact;
 
-		CollisionResult(const Store<Collider>::Ref &_first, const Store<Collider>::Ref &_second, const ContactPoint &_contact)
+		CollisionResult(const Ref<Collider> &_first, const Ref<Collider> &_second, const ContactPoint &_contact)
 			: first(_first),
 			  second(_second),
 			  contact(_contact) {}

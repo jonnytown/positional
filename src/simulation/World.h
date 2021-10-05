@@ -25,7 +25,7 @@ namespace Positional
 		Store<Collider> m_colliders;
 		Collision::ABroadphase *m_broadphase;
 
-		Store<Collider>::Ref addCollider(const Store<Body>::Ref &body, const Collider &collider);
+		Ref<Collider> addCollider(const Ref<Body> &body, const Collider &collider);
 
 		vector<Constraint> m_contacts;
 		UInt32 m_contactCount;
@@ -36,21 +36,21 @@ namespace Positional
 		~World();
 
 		template <typename T>
-		Store<Body>::Ref createBody(const Vec3 &position, const Quat &rotation)
+		Ref<Body> createBody(const Vec3 &position, const Quat &rotation)
 		{
 			return m_bodies.store(Body::create<T>(this, position, rotation));
 		}
-		void destroyBody(Store<Body>::Ref ref);
+		void destroyBody(Ref<Body> ref);
 
-		Store<Collider>::Ref createSphereCollider(const Store<Body>::Ref &body, const Vec3 &center, const Float &radius, const Float &density, const Float &staticFriction, const Float &dynamicFriction, const Float &bounciness);
-		Store<Collider>::Ref createBoxCollider(const Store<Body>::Ref &body, const Vec3 &center, const Quat &rotation, const Vec3 &extents, const Float &density, const Float &staticFriction, const Float &dynamicFriction, const Float &bounciness);
-		Store<Collider>::Ref createCapsuleCollider(const Store<Body>::Ref &body, const Vec3 &center, const Quat &rotation, const Float &radius, const Float &length, const Float &density, const Float &staticFriction, const Float &dynamicFriction, const Float &bounciness);
-		void destroyCollider(Store<Collider>::Ref ref);
+		Ref<Collider> createSphereCollider(const Ref<Body> &body, const Vec3 &center, const Float &radius, const Float &density, const Float &staticFriction, const Float &dynamicFriction, const Float &bounciness);
+		Ref<Collider> createBoxCollider(const Ref<Body> &body, const Vec3 &center, const Quat &rotation, const Vec3 &extents, const Float &density, const Float &staticFriction, const Float &dynamicFriction, const Float &bounciness);
+		Ref<Collider> createCapsuleCollider(const Ref<Body> &body, const Vec3 &center, const Quat &rotation, const Float &radius, const Float &length, const Float &density, const Float &staticFriction, const Float &dynamicFriction, const Float &bounciness);
+		void destroyCollider(Ref<Collider> ref);
 
 		void raycast(const Ray &ray, const Float &maxDistance, const UInt32 &mask, vector<RaycastResult> &results) const;
-		void forEachBody(const function<void(const Store<Body>::Ref &)> &callback);
+		void forEachBody(const function<void(const Ref<Body> &)> &callback);
 		void forEachBoundsNode(const function <void(const Bounds &bounds)> &callback) const;
-		void forEachBroadPair(const function<void(const pair<Store<Collider>::Ref, Store<Collider>::Ref>&)> &callback) const;
+		void forEachBroadPair(const function<void(const pair<Ref<Collider>, Ref<Collider>>&)> &callback) const;
 		void forEachCollision(const function<void(const CollisionResult &)> &callback) const;
 
 		void updateBroadphase();

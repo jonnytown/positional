@@ -16,11 +16,11 @@ namespace Positional
 
 #pragma region Bodies
 
-	void World::destroyBody(Store<Body>::Ref ref)
+	void World::destroyBody(Ref<Body> ref)
 	{
 		assert(ref.valid());
 
-		m_colliders.erase([&, this](const Store<Collider>::Ref &elRef)
+		m_colliders.erase([&, this](const Ref<Collider> &elRef)
 		{
 			const Collider &collider = elRef.get();
 			if (collider.body() == ref)
@@ -43,25 +43,25 @@ namespace Positional
 #pragma endregion // Bodies
 
 #pragma region Colliders
-	Store<Collider>::Ref World::createSphereCollider(const Store<Body>::Ref &body, const Vec3 &center, const Float &radius, const Float &density, const Float &staticFriction, const Float &dynamicFriction, const Float &bounciness)
+	Ref<Collider> World::createSphereCollider(const Ref<Body> &body, const Vec3 &center, const Float &radius, const Float &density, const Float &staticFriction, const Float &dynamicFriction, const Float &bounciness)
 	{
 		auto collider = Collider::create<Collision::SphereCollider>(body, center, Quat::identity, Shape(radius), density, staticFriction, dynamicFriction, bounciness);
 		return addCollider(body, collider);
 	}
 
-	Store<Collider>::Ref World::createBoxCollider(const Store<Body>::Ref &body, const Vec3 &center, const Quat &rotation, const Vec3 &extents, const Float &density, const Float &staticFriction, const Float &dynamicFriction, const Float &bounciness)
+	Ref<Collider> World::createBoxCollider(const Ref<Body> &body, const Vec3 &center, const Quat &rotation, const Vec3 &extents, const Float &density, const Float &staticFriction, const Float &dynamicFriction, const Float &bounciness)
 	{
 		auto collider = Collider::create<Collision::BoxCollider>(body, center, rotation, Shape(extents), density, staticFriction, dynamicFriction, bounciness);
 		return addCollider(body, collider);
 	}
 
-	Store<Collider>::Ref World::createCapsuleCollider(const Store<Body>::Ref &body, const Vec3 &center, const Quat &rotation, const Float &radius, const Float &length, const Float &density, const Float &staticFriction, const Float &dynamicFriction, const Float &bounciness)
+	Ref<Collider> World::createCapsuleCollider(const Ref<Body> &body, const Vec3 &center, const Quat &rotation, const Float &radius, const Float &length, const Float &density, const Float &staticFriction, const Float &dynamicFriction, const Float &bounciness)
 	{
 		auto collider = Collider::create<Collision::CapsuleCollider>(body, center, rotation, Shape(radius, length), density, staticFriction, dynamicFriction, bounciness);
 		return addCollider(body, collider);
 	}
 
-	Store<Collider>::Ref World::addCollider(const Store<Body>::Ref &bodyRef, const Collider &collider)
+	Ref<Collider> World::addCollider(const Ref<Body> &bodyRef, const Collider &collider)
 	{
 		auto ref = m_colliders.store(collider);
 		if (collider.isStatic())
@@ -83,7 +83,7 @@ namespace Positional
 		return ref;
 	}
 
-	void World::destroyCollider(Store<Collider>::Ref ref)
+	void World::destroyCollider(Ref<Collider> ref)
 	{
 		assert(ref.valid());
 		if (ref.get().isStatic())
@@ -117,7 +117,7 @@ namespace Positional
 #pragma region Queries
 	void World::raycast(const Ray &ray, const Float &maxDistance, const UInt32 &mask, vector<RaycastResult> &results) const
 	{
-		vector<Store<Collider>::Ref> broadResults;
+		vector<Ref<Collider>> broadResults;
 		m_broadphase->raycast(ray, maxDistance, mask, broadResults);
 
 		for (UInt32 i = 0, count = broadResults.size(); i < count; ++i)
@@ -143,7 +143,7 @@ namespace Positional
 		}
 	}
 
-	void World::forEachBody(const function<void(const Store<Body>::Ref &)> &callback)
+	void World::forEachBody(const function<void(const Ref<Body> &)> &callback)
 	{
 		m_bodies.forEach(callback);
 	}
@@ -163,7 +163,7 @@ namespace Positional
 		}
 	}
 
-	void World::forEachBroadPair(const function<void(const pair<Store<Collider>::Ref, Store<Collider>::Ref> &)> &callback) const
+	void World::forEachBroadPair(const function<void(const pair<Ref<Collider>, Ref<Collider>> &)> &callback) const
 	{
 		m_broadphase->forEachOverlapPair(callback);
 	}
@@ -184,7 +184,7 @@ namespace Positional
 		}
 		else
 		{
-			m_broadphase->forEachOverlapPair([&](const pair<Store<Collider>::Ref, Store<Collider>::Ref> &pair)
+			m_broadphase->forEachOverlapPair([&](const pair<Ref<Collider>, Ref<Collider>> &pair)
 			{
 				ContactPoint contact;
 				if (Collision::Penetration::compute(pair.first.get(), pair.second.get(), contact))
@@ -213,7 +213,7 @@ namespace Positional
 		// collect collision pairs
 		m_contactCount = 0;
 		m_broadphase->update(deltaTime);
-		m_broadphase->forEachOverlapPair([&, this](const pair<Store<Collider>::Ref, Store<Collider>::Ref> &pair)
+		m_broadphase->forEachOverlapPair([&, this](const pair<Ref<Collider>, Ref<Collider>> &pair)
 		{
 			if (m_contactCount >= m_contacts.size())
 			{
