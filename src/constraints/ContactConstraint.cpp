@@ -22,38 +22,33 @@ namespace Positional
 		force = 0;
 	}
 
-	inline void getContacts(const Constraint &constraint, optional<Vec3> &posA, optional<Vec3> &posB)
+	inline void getContacts(const Constraint &constraint, Vec3& posA, Vec3& posB)
 	{
 		auto d = constraint.getData<ContactConstraint::Data>();
-		posA.emplace(Body::pointToWorld(constraint.bodyA, d->contact.pointA));
-		posB.emplace(Body::pointToWorld(constraint.bodyB, d->contact.pointB));
+		posA = Body::pointToWorld(constraint.bodyA, d->contact.pointA);
+		posB = Body::pointToWorld(constraint.bodyB, d->contact.pointB);
 	}
 
-	inline void getContacts(const Constraint &constraint, Vec3 &prevA, optional<Vec3> &posA, Vec3 &prevB, optional<Vec3> &posB)
+	inline void getContacts(const Constraint &constraint, Vec3 &prevA, Vec3& currA, Vec3 &prevB, Vec3& currB)
 	{
 		auto d = constraint.getData<ContactConstraint::Data>();
-
-		Vec3 currA, currB;
 		Body::pointsToWorld(constraint.bodyA, d->contact.pointA, prevA, currA);
 		Body::pointsToWorld(constraint.bodyB, d->contact.pointB, prevB, currB);
-
-		posA.emplace(currA);
-		posB.emplace(currB);
 	}
 
-	inline Vec3 getVelocity(const Constraint& constraint, const optional<Vec3>& posA, const optional<Vec3>& posB)
+	inline Vec3 getVelocity(const Constraint& constraint, Vec3& posA, const Vec3& posB)
 	{
 		Vec3 velocity(0);
 		if (constraint.bodyA.valid())
 		{
 			const Body &a = constraint.bodyA.get();
-			velocity = a.getVelocityAt( posA.value());
+			velocity = a.getVelocityAt( posA);
 		}
 
-		if (constraint.bodyB.valid() && posB.has_value())
+		if (constraint.bodyB.valid())
 		{
 			const Body &b = constraint.bodyB.get();
-			velocity = velocity - b.getVelocityAt(posB.value());
+			velocity = velocity - b.getVelocityAt(posB);
 		}
 
 		return velocity;
@@ -93,9 +88,7 @@ namespace Positional
 		}
 		d->contact = contact;
 
-
-		optional<Vec3> posA, posB, comA, comB;
-		Vec3 prevA, prevB;
+		Vec3 posA, posB, prevA, prevB;
 		getContacts(constraint, prevA, posA, prevB, posB);;
 
 		// penetration
@@ -110,7 +103,7 @@ namespace Positional
 		// static friction
 		getContacts(constraint, posA, posB);
 
-		const Vec3 dp = (posB.value() - prevB) - (posA.value() - prevA);
+		const Vec3 dp = (posB - prevB) - (posA - prevA);
 		const Vec3 dpTan = dp - contact.normal * dp.dot(contact.normal);
 		Vec3 normalT;
 		Float lambdaT;
@@ -131,9 +124,8 @@ namespace Positional
 			optional<World *> world = constraint.getWorld();
 			assert(world.has_value());
 
-			Vec3 v;
+			Vec3 v, posA, posB;
 			Float vn;
-			optional<Vec3> posA, posB;
 			getContacts(constraint, posA, posB);
 
 			// restitution
