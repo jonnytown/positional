@@ -7,6 +7,7 @@
 #include "ShapeId.h"
 #include "mass/Volume.h"
 #include "mass/Computer.h"
+#include "Collider.h"
 
 namespace Positional::Collision
 {
