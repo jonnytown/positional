@@ -4,6 +4,7 @@
 #include "math/Math.h"
 #include "Constraint.h"
 #include "collision/narrowphase/ContactPoint.h"
+#include <functional>
 
 using namespace std;
 namespace Positional
@@ -12,8 +13,13 @@ namespace Positional
 	{
 		struct Data
 		{
+		private:
+			function<bool(const Collider &, const Collider &, ContactPoint &)> m_compute;
+
+		public:
 			Ref<Collider> colliderA;
 			Ref<Collider> colliderB;
+			
 			bool colliding;
 			Float staticFriction;
 			Float dynamicFriction;
@@ -23,6 +29,11 @@ namespace Positional
 
 			Data() = default;
 			void init(const Ref<Collider> &_colliderA, const Ref<Collider> &_colliderB);
+
+			inline bool compute(ContactPoint &point)
+			{
+				return m_compute(colliderA.get(), colliderB.get(), point);
+			}
 		};
 
 		static void solvePositions(Constraint &constraint, const Float &dtInvSq);

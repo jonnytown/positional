@@ -9,6 +9,7 @@
 #include "Simplex.h"
 #include "Polytope.h"
 #include "ContactPoint.h"
+#include <functional>
 
 namespace Positional
 {
@@ -22,6 +23,7 @@ namespace Positional
 		static struct Penetration 
 		{
 			static bool compute(const Collider &a, const Collider &b, ContactPoint &outContact);
+			static std::function<bool(const Collider &, const Collider &, ContactPoint &)> getComputeFunction(const Collider &a, const Collider &b);
 
 			static bool sphereSphere(const Collider &a, const Collider &b, ContactPoint &outContact);
 			static bool capsuleCapsule(const Collider &a, const Collider &b, ContactPoint &outContact);

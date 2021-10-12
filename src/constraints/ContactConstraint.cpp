@@ -7,12 +7,13 @@ namespace Positional
 {
 	void ContactConstraint::Data::init(const Ref<Collider> &_colliderA, const Ref<Collider> &_colliderB)
 	{
-		colliderA = _colliderA;
-		colliderB = _colliderB;
-
 		const Collider &collA = _colliderA.get();
 		const Collider &collB = _colliderB.get();
 
+		m_compute = Collision::Penetration::getComputeFunction(collA, collB);
+
+		colliderA = _colliderA;
+		colliderB = _colliderB;
 		colliding = false;
 		staticFriction = (collA.staticFriction + collB.staticFriction) * 0.5;
 		dynamicFriction = (collA.dynamicFriction + collB.dynamicFriction) * 0.5;
@@ -76,10 +77,7 @@ namespace Positional
 	{
 		auto d = constraint.getData<Data>();
 		ContactPoint contact;
-		const bool colliding = Collision::Penetration::compute(
-			d->colliderA.get(),
-			d->colliderB.get(),
-			contact);
+		const bool colliding = d->compute(contact);
 
 		d->colliding = colliding;
 		if (!colliding)
@@ -89,7 +87,7 @@ namespace Positional
 		d->contact = contact;
 
 		Vec3 posA, posB, prevA, prevB;
-		getContacts(constraint, prevA, posA, prevB, posB);;
+		getContacts(constraint, prevA, posA, prevB, posB);
 
 		// penetration
 		Float lambdaN;

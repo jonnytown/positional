@@ -7,7 +7,8 @@
 
 namespace Positional::Collision
 {
-	const Float k_epsilonSq = 0.000001;
+	const Float k_gjk_epsilonSq = Math::Epsilon;
+	const Float k_epa_epsilonSq = 0.000000001;
 
 	bool Penetration::compute(const Collider &a, const Collider &b, ContactPoint &outContact)
 	{
@@ -28,6 +29,48 @@ namespace Positional::Collision
 					   : sphereCapsule(b, a, true, outContact);
 		default:
 			return gjk_epa(a, b, outContact);
+		}
+	}
+
+	bool boxSphereNoSwap(const Collider &a, const Collider &b, ContactPoint &outContact)
+	{
+		return Penetration::boxSphere(a, b, false, outContact);
+	}
+
+	bool boxSphereSwap(const Collider &a, const Collider &b, ContactPoint &outContact)
+	{
+		return Penetration::boxSphere(b, a, true, outContact);
+	}
+
+	bool sphereCapsuleNoSwap(const Collider &a, const Collider &b, ContactPoint &outContact)
+	{
+		return Penetration::sphereCapsule(a, b, false, outContact);
+	}
+
+	bool sphereCapsuleSwap(const Collider &a, const Collider &b, ContactPoint &outContact)
+	{
+		return Penetration::sphereCapsule(b, a, true, outContact);
+	}
+
+	std::function<bool(const Collider &, const Collider &, ContactPoint &)> Penetration::getComputeFunction(const Collider &a, const Collider &b)
+	{
+		const UInt8 shapePair = a.shapeId() | b.shapeId();
+		switch (shapePair)
+		{
+		case ShapeId::Sphere:
+			return sphereSphere;
+		case ShapeId::Capsule:
+			return capsuleCapsule;
+		case ShapeId::Box | ShapeId::Sphere:
+			return a.shapeId() == ShapeId::Box
+					   ? boxSphereNoSwap
+					   : boxSphereSwap;
+		case ShapeId::Sphere | ShapeId::Capsule:
+			return a.shapeId() == ShapeId::Sphere
+					   ? sphereCapsuleNoSwap
+					   : sphereCapsuleSwap;
+		default:
+			return gjk_epa;
 		}
 	}
 
@@ -137,6 +180,8 @@ namespace Positional::Collision
 		}
 	}
 
+	
+
 	bool Penetration::boxSphere(const Collider &box, const Collider &sphere, const bool &swapped, ContactPoint &outContact)
 	{
 		const Vec3 centerInWorld = sphere.pointToWorld(Vec3::zero);
@@ -242,7 +287,7 @@ namespace Positional::Collision
 			const Vec3 nearest = outSimplex.nearest(nearDim, nearIndex);
 
 			// nearest is origin: we have a collision
-			if (nearest.lengthSq() < k_epsilonSq)
+			if (nearest.lengthSq() == k_gjk_epsilonSq)
 			{
 				return true;
 			}
@@ -277,7 +322,7 @@ namespace Positional::Collision
 				for (UInt8 i = 0; i < 6; ++i)
 				{
 					csoSupport(a, b, searches[i], outPolytope.vertices[1], outPolytope.verticesA[1], outPolytope.verticesB[1]);
-					if (outPolytope.vertices[0].distanceSq(outPolytope.vertices[1]) > k_epsilonSq)
+					if (outPolytope.vertices[0].distanceSq(outPolytope.vertices[1]) > k_epa_epsilonSq)
 					{
 						break;
 					}
@@ -300,7 +345,7 @@ namespace Positional::Collision
 				{
 					csoSupport(a, b, search, outPolytope.vertices[2], outPolytope.verticesA[2], outPolytope.verticesB[2]);
 
-					if (outPolytope.vertices[2].lengthSq() > k_epsilonSq)
+					if (outPolytope.vertices[2].lengthSq() > k_epa_epsilonSq)
 					{
 						break;
 					}
@@ -317,7 +362,7 @@ namespace Positional::Collision
 
 				csoSupport(a, b, search, outPolytope.vertices[3], outPolytope.verticesA[3], outPolytope.verticesB[3]);
 
-				if (outPolytope.vertices[3].lengthSq() < k_epsilonSq)
+				if (outPolytope.vertices[3].lengthSq() < k_epa_epsilonSq)
 				{
 					search = -search;
 					csoSupport(a, b, search, outPolytope.vertices[3], outPolytope.verticesA[3], outPolytope.verticesB[3]);
@@ -346,7 +391,7 @@ namespace Positional::Collision
 			Float lenSq;
 			Vec3 point = outPolytope.nearest(lenSq, idx);
 
-			const bool closeEnough = Math::approx(nearestLenSq, lenSq, k_epsilonSq);
+			const bool closeEnough = Math::approx(nearestLenSq, lenSq, k_epa_epsilonSq);
 
 			nearest = point;
 			nearestLenSq = lenSq;
