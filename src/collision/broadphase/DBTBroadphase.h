@@ -4,7 +4,7 @@
 #ifndef DBT_BROADPHASE_H
 #define DBT_BROADPHASE_H
 
-#include "ABroadphase.h"
+#include "IBroadphase.h"
 #include "BoundsTree.h"
 #include "math/Math.h"
 #include <optional>
@@ -13,7 +13,7 @@ using namespace std;
 
 namespace Positional::Collision
 {
-	class DBTBroadphase : public ABroadphase
+	class DBTBroadphase : public IBroadphase
 	{
 	private:
 		class Node

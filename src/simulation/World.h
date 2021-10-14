@@ -8,11 +8,11 @@
 #include "collision/collider/CapsuleCollider.h"
 #include <unordered_set>
 #include "data/Store.h"
-#include "collision/broadphase/DBTBroadphase.h"
-#include "collision/narrowphase/Penetration.h"
+#include "collision/broadphase/IBroadphase.h"
+#include "collision/narrowphase/INarrowphase.h"
 #include "collision/narrowphase/RaycastResult.h"
 #include "collision/narrowphase/CollisionResult.h"
-#include "constraints/ContactConstraint.h"
+#include "constraints/Constraint.h"
 
 using namespace std;
 
@@ -23,7 +23,8 @@ namespace Positional
 	private:
 		Store<Body> m_bodies;
 		Store<Collider> m_colliders;
-		Collision::ABroadphase *m_broadphase;
+		Collision::IBroadphase *m_broadphase;
+		Collision::INarrowphase *m_narrowphase;
 
 		Ref<Collider> addCollider(const Ref<Body> &body, const Collider &collider);
 

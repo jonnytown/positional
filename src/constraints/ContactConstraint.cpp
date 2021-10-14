@@ -5,21 +5,6 @@
 
 namespace Positional
 {
-	void ContactConstraint::Data::init(const Ref<Collider> &_colliderA, const Ref<Collider> &_colliderB)
-	{
-		const Collider &collA = _colliderA.get();
-		const Collider &collB = _colliderB.get();
-
-		m_compute = Collision::Penetration::getComputeFunction(collA, collB);
-
-		colliderA = _colliderA;
-		colliderB = _colliderB;
-		colliding = false;
-		staticFriction = (collA.staticFriction + collB.staticFriction) * 0.5;
-		dynamicFriction = (collA.dynamicFriction + collB.dynamicFriction) * 0.5;
-		restitution = (collA.restitution + collB.restitution) * 0.5;
-	}
-
 
 	inline void getContacts(const Constraint &constraint, const ContactConstraint::Data *d, Vec3 &posA, Vec3 &posB)
 	{

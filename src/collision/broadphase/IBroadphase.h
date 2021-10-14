@@ -1,8 +1,8 @@
 /*
- * Interface for broadphase implementations
+ * Interface for broadphase
  */
-#ifndef ABROADPHASE_H
-#define ABROADPHASE_H
+#ifndef IBROADPHASE_H
+#define IBROADPHASE_H
 
 #include "collision/collider/Collider.h"
 #include "data/Store.h"
@@ -12,10 +12,10 @@ using namespace std;
 
 namespace Positional::Collision
 {
-	class ABroadphase
+	class IBroadphase
 	{
 	public:
-		virtual ~ABroadphase() {};
+		virtual ~IBroadphase() {};
 		virtual void add(const Ref<Collider> &collider) = 0;
 		virtual void addStatic(const Ref<Collider> &collider) = 0;
 		virtual void remove(const Ref<Collider> &collider) = 0;
@@ -26,4 +26,4 @@ namespace Positional::Collision
 		virtual void forEachOverlapPair(const function<void(pair<Ref<Collider>, Ref<Collider>>)> &callback) const = 0;
 	};
 }
-#endif // ABROADPHASE_H
+#endif // IBROADPHASE_H

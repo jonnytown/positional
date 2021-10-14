@@ -3,7 +3,7 @@
 
 #include "math/Math.h"
 #include "Constraint.h"
-#include "collision/narrowphase/ContactPoint.h"
+#include "collision/narrowphase/INarrowphase.h"
 #include <functional>
 
 using namespace std;
@@ -14,7 +14,7 @@ namespace Positional
 		struct Data
 		{
 		private:
-			function<bool(const Collider &, const Collider &, ContactPoint &)> m_compute;
+			Collision::PenetrationFunction m_compute;
 
 		public:
 			Ref<Collider> colliderA;
@@ -27,7 +27,20 @@ namespace Positional
 			ContactPoint contact;
 
 			Data() = default;
-			void init(const Ref<Collider> &_colliderA, const Ref<Collider> &_colliderB);
+			inline void init(const Ref<Collider> &_colliderA, const Ref<Collider> &_colliderB, const Collision::INarrowphase *narrowphase)
+			{
+				const Collider &collA = _colliderA.get();
+				const Collider &collB = _colliderB.get();
+
+				m_compute = narrowphase->getComputeFunction(collA, collB);
+
+				colliderA = _colliderA;
+				colliderB = _colliderB;
+				colliding = false;
+				staticFriction = (collA.staticFriction + collB.staticFriction) * 0.5;
+				dynamicFriction = (collA.dynamicFriction + collB.dynamicFriction) * 0.5;
+				restitution = (collA.restitution + collB.restitution) * 0.5;
+			}
 
 			inline void update()
 			{

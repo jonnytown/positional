@@ -22,9 +22,6 @@ namespace Positional
 	{
 		static struct Penetration 
 		{
-			static bool compute(const Collider &a, const Collider &b, ContactPoint &outContact);
-			static std::function<bool(const Collider &, const Collider &, ContactPoint &)> getComputeFunction(const Collider &a, const Collider &b);
-
 			static bool sphereSphere(const Collider &a, const Collider &b, ContactPoint &outContact);
 			static bool capsuleCapsule(const Collider &a, const Collider &b, ContactPoint &outContact);
 			static bool boxSphere(const Collider &box, const Collider &sphere, const bool &swapped, ContactPoint &outContact);

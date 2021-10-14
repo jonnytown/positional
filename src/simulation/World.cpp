@@ -1,4 +1,7 @@
 #include "World.h"
+#include "collision/broadphase/DBTBroadphase.h"
+#include "collision/narrowphase/GJKEPANarrowphase.h"
+#include "constraints/ContactConstraint.h"
 
 namespace Positional
 {
@@ -7,11 +10,13 @@ namespace Positional
 		m_contactCount = 0;
 		gravity = Vec3::zero;
 		m_broadphase = new Collision::DBTBroadphase(2.0);
+		m_narrowphase = new Collision::GJKEPANarrowphase();
 	}
 
 	World::~World()
 	{
 		delete m_broadphase;
+		delete m_narrowphase;
 	}
 
 #pragma region Bodies
@@ -181,7 +186,7 @@ namespace Positional
 			m_broadphase->forEachOverlapPair([&](const pair<Ref<Collider>, Ref<Collider>> &pair)
 			{
 				ContactPoint contact;
-				if (Collision::Penetration::compute(pair.first.get(), pair.second.get(), contact))
+				if (m_narrowphase->compute(pair.first.get(), pair.second.get(), contact))
 				{
 					auto result = CollisionResult(pair.first, pair.second, contact);
 					callback(result);
@@ -218,7 +223,8 @@ namespace Positional
 				pair.first.get().body(),
 				pair.second.get().body(),
 				pair.first,
-				pair.second
+				pair.second,
+				m_narrowphase
 			);
 
 			m_contactCount++;
