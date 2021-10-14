@@ -16,6 +16,7 @@ namespace Positional
 		// in world space
 		Vec3 normal;
 		Float depth;
+		Float force;
 	};
 }
 #endif // CONTACT_POINT_H

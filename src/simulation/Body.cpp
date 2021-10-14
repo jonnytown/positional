@@ -5,7 +5,7 @@
 namespace Positional
 {
 	const Ref<Body> Body::null = Ref<Body>();
-#pragma optimize("", off)
+
 	void Body::updateMass()
 	{
 		Mass::Computer computer;
@@ -31,7 +31,6 @@ namespace Positional
 			throw std::runtime_error("could not diagonalize inertia tensor");
 		}
 	}
-#pragma optimize("", on)
 
 	Float Body::getInverseMass(const Vec3 &normal, const optional<Vec3> &pos)
 	{
@@ -54,7 +53,7 @@ namespace Positional
 
 		return w;
 	}
-#pragma optimize("", off)
+
 	void Body::applyRotation(const Vec3 &rot, const Float &scale)
 	{
 		// clamp max rotations per substep
@@ -123,5 +122,4 @@ namespace Positional
 			applyRotation(dq);
 		}
 	}
-#pragma optimize("", on)
 }

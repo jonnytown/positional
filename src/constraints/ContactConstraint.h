@@ -25,14 +25,13 @@ namespace Positional
 			Float dynamicFriction;
 			Float restitution;
 			ContactPoint contact;
-			Float force;
 
 			Data() = default;
 			void init(const Ref<Collider> &_colliderA, const Ref<Collider> &_colliderB);
 
-			inline bool compute(ContactPoint &point)
+			inline void update()
 			{
-				return m_compute(colliderA.get(), colliderB.get(), point);
+				colliding = m_compute(colliderA.get(), colliderB.get(), contact);
 			}
 		};
 

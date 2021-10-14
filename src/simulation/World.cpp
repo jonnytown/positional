@@ -150,16 +150,10 @@ namespace Positional
 
 	void World::forEachBoundsNode(const function<void(const Bounds &bounds)> &callback) const
 	{
-		try
+		const auto dbt = static_cast<Collision::DBTBroadphase *>(m_broadphase);
+		if (dbt)
 		{
-			const auto dbt = static_cast<Collision::DBTBroadphase *>(m_broadphase);
-			if (dbt)
-			{
-				dbt->forEachNode(callback);
-			}
-		}
-		catch (exception exc)
-		{
+			dbt->forEachNode(callback);
 		}
 	}
 

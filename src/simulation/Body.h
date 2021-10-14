@@ -78,7 +78,7 @@ namespace Positional
 
 		inline Vec3 getPreVelocityAt(const Vec3 &point) const
 		{
-			return preVelocity.linear - (point - pose.transform(massPose.position)).cross(preVelocity.angular);
+			return preVelocity.linear - (point - prePose.transform(massPose.position)).cross(preVelocity.angular);
 		}
 
 		/*
@@ -108,26 +108,33 @@ namespace Positional
 			return point;
 		}
 
-		static inline Vec3 worldCom(const Ref<Body>& body)
+		static inline Vec3 prePointToWorld(const Ref<Body> &body, const Vec3 &point)
+		{
+			if (body.valid())
+			{
+				return body.get().prePose.transform(point);
+			}
+			return point;
+		}
+
+		static inline Vec3 preCOM(const Ref<Body>& body)
 		{
 			if (body.valid())
 			{
 				const Body& b = body.get();
-				return b.pose.transform(b.massPose.position);
+				return b.prePose.transform(b.massPose.position);
 			}
 			return Vec3::zero;
 		}
 
-		static inline void pointsToWorld(const Ref<Body> &body, const Vec3 &point, Vec3 &outPrev, Vec3 &outCurr)
+		static inline Vec3 COM(const Ref<Body> &body)
 		{
 			if (body.valid())
 			{
 				const Body &b = body.get();
-				outPrev = b.prePose.transform(point);
-				outCurr = b.pose.transform(point);
-				return;
+				return b.pose.transform(b.massPose.position);
 			}
-			outPrev = outCurr = point;
+			return Vec3::zero;
 		}
 
 		static inline Vec3 pointToLocal(const Ref<Body> &body, const Vec3 &point)

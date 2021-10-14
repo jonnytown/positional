@@ -108,6 +108,11 @@ namespace Positional
 			return Vec3(lhs / rhs.x, lhs / rhs.y, lhs / rhs.z);
 		}
 
+		inline bool approx(const Vec3 &rhs, const Float &epsilon = Math::Epsilon)
+		{
+			return Math::approx(x, rhs.x, epsilon) && Math::approx(y, rhs.y, epsilon) && Math::approx(z, rhs.z, epsilon);
+		}
+
 		inline Float length() const
 		{
 			return Math::sqrt(x * x + y * y + z * z);

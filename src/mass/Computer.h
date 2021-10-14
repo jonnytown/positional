@@ -23,7 +23,6 @@ namespace Positional::Mass
 			m_com = Vec3::zero;
 		}
 
-#pragma optimize("", off)
 		// indexed rotation around axis, with sine and cosine of half-angle
 		inline static Quat indexedRotation(const UInt8 &axis, const Float &s, const Float &c)
 		{
@@ -84,7 +83,6 @@ namespace Positional::Mass
 			outRotation = q;
 			return Vec3(d.m11(), d.m22(), d.m33());
 		}
-#pragma optimize("", on)
 	public:
 		Computer() : m_inertia(0), m_com(0), m_mass(0) {}
 		Computer(const Mat3x3 &inertia, const Vec3 &com, const Float &mass) :

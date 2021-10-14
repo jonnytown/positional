@@ -18,23 +18,28 @@ namespace Positional
 		staticFriction = (collA.staticFriction + collB.staticFriction) * 0.5;
 		dynamicFriction = (collA.dynamicFriction + collB.dynamicFriction) * 0.5;
 		restitution = (collA.restitution + collB.restitution) * 0.5;
-
-		contact = ContactPoint();
-		force = 0;
 	}
 
-	inline void getContacts(const Constraint &constraint, Vec3& posA, Vec3& posB)
+
+	inline void getContacts(const Constraint &constraint, const ContactConstraint::Data *d, Vec3 &posA, Vec3 &posB)
 	{
-		auto d = constraint.getData<ContactConstraint::Data>();
 		posA = Body::pointToWorld(constraint.bodyA, d->contact.pointA);
 		posB = Body::pointToWorld(constraint.bodyB, d->contact.pointB);
 	}
 
-	inline void getContacts(const Constraint &constraint, Vec3 &prevA, Vec3& currA, Vec3 &prevB, Vec3& currB)
+	inline void getPreContacts(const Constraint &constraint, const ContactConstraint::Data *d, Vec3 &posA, Vec3 &posB)
 	{
-		auto d = constraint.getData<ContactConstraint::Data>();
-		Body::pointsToWorld(constraint.bodyA, d->contact.pointA, prevA, currA);
-		Body::pointsToWorld(constraint.bodyB, d->contact.pointB, prevB, currB);
+		posA = Body::prePointToWorld(constraint.bodyA, d->contact.pointA);
+		posB = Body::prePointToWorld(constraint.bodyB, d->contact.pointB);
+	}
+
+
+	inline void getCOMs(const Constraint &constraint, Vec3 &preA, Vec3 &comA, Vec3 &preB, Vec3 &comB)
+	{
+		preA = Body::preCOM(constraint.bodyA);
+		comA = Body::COM(constraint.bodyA);
+		preB = Body::preCOM(constraint.bodyB);
+		comB = Body::COM(constraint.bodyB);
 	}
 
 	inline Vec3 getVelocity(const Constraint& constraint, Vec3& posA, const Vec3& posB)
@@ -55,54 +60,51 @@ namespace Positional
 		return velocity;
 	}
 
-	inline Vec3 getPreVelocity(const Constraint &constraint, const optional<Vec3> &posA, const optional<Vec3> &posB)
+	inline Vec3 getPreVelocity(const Constraint &constraint, const Vec3 &posA, const Vec3 &posB)
 	{
 		Vec3 velocity(0);
 		if (constraint.bodyA.valid())
 		{
 			const Body &a = constraint.bodyA.get();
-			velocity = a.getPreVelocityAt(posA.value());
+			velocity = a.getPreVelocityAt(posA);
 		}
 
-		if (constraint.bodyB.valid() && posB.has_value())
+		if (constraint.bodyB.valid())
 		{
 			const Body &b = constraint.bodyB.get();
-			velocity = velocity - b.getPreVelocityAt(posB.value());
+			velocity = velocity - b.getPreVelocityAt(posB);
 		}
 
 		return velocity;
 	}
-#pragma optimize("", off)
-	void ContactConstraint::solvePositions(Constraint &constraint, const Float &dtInvSq)
+
+		void ContactConstraint::solvePositions(Constraint &constraint, const Float &dtInvSq)
 	{
 		auto d = constraint.getData<Data>();
-		ContactPoint contact;
-		const bool colliding = d->compute(contact);
-
-		d->colliding = colliding;
-		if (!colliding)
+		d->update();
+		if (!d->colliding)
 		{
 			return;
 		}
-		d->contact = contact;
 
-		Vec3 posA, posB, prevA, prevB;
-		getContacts(constraint, prevA, posA, prevB, posB);
-
+		Vec3 posA, posB;
+		getContacts(constraint, d, posA, posB);
 		// penetration
 		Float lambdaN;
-		if (constraint.computeCorrections(contact.normal, contact.depth, 0, dtInvSq, lambdaN, posA, posB))
+		if (constraint.computeCorrections(d->contact.normal, d->contact.depth, 0, dtInvSq, lambdaN, posA, posB))
 		{
-			d->force = Math::abs(lambdaN * dtInvSq);
+			d->contact.force = Math::abs(lambdaN * dtInvSq);
 			// apply penetration correction
-			constraint.applyCorrections(contact.normal, lambdaN, false, posA, posB);
+			constraint.applyCorrections(d->contact.normal, lambdaN, false, posA, posB);
 		}
 
 		// static friction
-		getContacts(constraint, posA, posB);
+		Vec3 preA, preB;
+		getContacts(constraint, d, posA, posB);
+		getPreContacts(constraint, d, preA, preB);
 
-		const Vec3 dp = (posB - prevB) - (posA - prevA);
-		const Vec3 dpTan = dp - contact.normal * dp.dot(contact.normal);
+		const Vec3 dp = (posB - preB) - (posA - preA);
+		const Vec3 dpTan = dp - d->contact.normal * dp.dot(d->contact.normal);
 		Vec3 normalT;
 		Float lambdaT;
 		if (constraint.computeCorrections(dpTan, 0, dtInvSq, normalT, lambdaT, posA, posB))
@@ -122,14 +124,15 @@ namespace Positional
 			optional<World *> world = constraint.getWorld();
 			assert(world.has_value());
 
-			Vec3 v, posA, posB;
+			Vec3 v, preA, posA, preB, posB;
 			Float vn;
-			getContacts(constraint, posA, posB);
+			getPreContacts(constraint, d, preA, preB);
+			getContacts(constraint, d, posA, posB);
 
 			// restitution
 			v = getVelocity(constraint, posA, posB);
 			vn = d->contact.normal.dot(v);
-			const Vec3 preVel = getPreVelocity(constraint, posA, posB);
+			const Vec3 preVel = getPreVelocity(constraint, preA, preB);
 
 			const Float preVn = d->contact.normal.dot(preVel);
 			const Float e = Math::abs(vn) < 2.0 * dt * world.value()->gravity.length() ? 0 : d->restitution;
@@ -142,10 +145,9 @@ namespace Positional
 
 			const Vec3 vt = v - d->contact.normal * vn;
 			const Float vtLen = vt.length();
-			const Vec3 dynamicFriction = (vt / -vtLen) * Math::min(dt * d->dynamicFriction * d->force, vtLen);
+			const Vec3 dynamicFriction = (vt / -vtLen) * Math::min(dt * d->dynamicFriction * d->contact.force, vtLen);
 
-			constraint.applyCorrections(dynamicFriction, 0, dtInvSq, true, posA, posB);			
+			constraint.applyCorrections(dynamicFriction, 0, dtInvSq, true, posA, posB);
 		}
 	}
-#pragma optimize("", on)
 }

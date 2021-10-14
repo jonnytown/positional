@@ -180,8 +180,6 @@ namespace Positional::Collision
 		}
 	}
 
-	
-
 	bool Penetration::boxSphere(const Collider &box, const Collider &sphere, const bool &swapped, ContactPoint &outContact)
 	{
 		const Vec3 centerInWorld = sphere.pointToWorld(Vec3::zero);
@@ -278,7 +276,7 @@ namespace Positional::Collision
 		Vec3 support, supportA, supportB;
 		csoSupport(a, b, Vec3::pos_x, support, supportA, supportB);
 
-		const UInt8 MAX_ITERS = 128;
+		const UInt8 MAX_ITERS = 16;
 		for (UInt8 i = 0; i < MAX_ITERS; ++i)
 		{
 			outSimplex.add(support, supportA, supportB);
@@ -287,7 +285,7 @@ namespace Positional::Collision
 			const Vec3 nearest = outSimplex.nearest(nearDim, nearIndex);
 
 			// nearest is origin: we have a collision
-			if (nearest.lengthSq() == k_gjk_epsilonSq)
+			if (nearest.lengthSq() < k_gjk_epsilonSq)
 			{
 				return true;
 			}
@@ -377,7 +375,7 @@ namespace Positional::Collision
 		Float nearestLenSq;
 		Vec3 nearest = outPolytope.nearest(nearestLenSq, nearestTriIdx);
 
-		const UInt8 MAX_ITERS = 64;
+		const UInt8 MAX_ITERS = 16;
 		for (UInt8 i = 0; i < MAX_ITERS; ++i)
 		{
 			const Vec3 search = outPolytope.normals[nearestTriIdx].normalized();
