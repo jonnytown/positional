@@ -11,7 +11,7 @@ namespace Positional
 {
 	struct ContactConstraint final
 	{
-		struct Data
+		struct Data final
 		{
 		private:
 			Collision::PenetrationFunction m_compute;

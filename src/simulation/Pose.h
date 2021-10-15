@@ -46,20 +46,36 @@ namespace Positional
 		Quat rotation;
 		bool usesRotation;
 
-		Pose(const bool &_useRotation) :
-			position(Vec3::zero),
-			rotation(Quat::identity),
-			usesRotation(_useRotation)
+		Pose()
+			: position(0),
+			  rotation(Quat::identity),
+			  usesRotation(true)
+		{
+			useRotation(true);
+		};
+
+		Pose(const bool &_useRotation)
+			: position(Vec3::zero),
+			  rotation(Quat::identity),
+			  usesRotation(_useRotation)
 		{
 			useRotation(_useRotation);
 		}
 
-		Pose(const Vec3 &_position, const Quat &_rotation, const bool &_useRotation) :
-			position(_position),
-			rotation(_rotation),
-			usesRotation(_useRotation)
+		Pose(const Vec3 &_position, const Quat &_rotation, const bool &_useRotation)
+			: position(_position),
+			  rotation(_rotation),
+			  usesRotation(_useRotation)
 		{
 			useRotation(_useRotation);
+		}
+
+		Pose(const Vec3 &_position, const Quat &_rotation)
+			: position(_position),
+			  rotation(_rotation),
+			  usesRotation(true)
+		{
+			useRotation(true);
 		}
 
 		inline Pose &operator=(const Pose &rhs)

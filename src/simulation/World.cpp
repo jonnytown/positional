@@ -42,6 +42,19 @@ namespace Positional
 			}
 			return false;
 		});
+		
+		// TODO: should we auto-destroy constraints?
+		/*
+		m_constraints.erase([&, this](const Ref<Constraint> &elRef)
+		{
+			const Constraint &constraint = elRef.get();
+			// TODO: only return true if both refs will be invalid
+			if (constraint.bodyA == ref || constraint.bodyB == ref)
+			{
+				return true;
+			}
+			return false;
+		});*/
 
 		m_bodies.erase(ref);
 	}
@@ -219,7 +232,7 @@ namespace Positional
 				m_contacts.push_back(Constraint::create<ContactConstraint, ContactConstraint::Data>());
 			}
 
-			m_contacts[m_contactCount].init<ContactConstraint, ContactConstraint::Data>(
+			m_contacts[m_contactCount].init<ContactConstraint::Data>(
 				pair.first.get().body(),
 				pair.second.get().body(),
 				pair.first,
@@ -238,22 +251,32 @@ namespace Positional
 				m_bodies[i].integrate(h, gravity);
 			}
 
-			// TODO: solve positions for each constraint
+			// solve positions for each constraint
 			for (UInt32 i = 0; i < m_contactCount; ++i)
 			{
 				m_contacts[i].solvePositions(hInvSq);
 			}
-			
+
+			for (UInt32 i = 0, count = m_constraints.count(); i < count; ++i)
+			{
+				m_constraints[i].solvePositions(hInvSq);
+			}
+
 			// differentiate
 			for (UInt32 i = 0, count = m_bodies.count(); i < count; ++i)
 			{
 				m_bodies[i].differentiate(hInv);
 			}
 
-			// TODO: solve velocities for each constraint
+			// solve velocities for each constraint
 			for (UInt32 i = 0; i < m_contactCount; ++i)
 			{
 				m_contacts[i].solveVelocities(h, hInvSq);
+			}
+
+			for (UInt32 i = 0, count = m_constraints.count(); i < count; ++i)
+			{
+				m_constraints[i].solveVelocities(h, hInvSq);
 			}
 		}
 	}

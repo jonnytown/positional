@@ -23,6 +23,7 @@ namespace Positional
 	private:
 		Store<Body> m_bodies;
 		Store<Collider> m_colliders;
+		Store<Constraint> m_constraints;
 		Collision::IBroadphase *m_broadphase;
 		Collision::INarrowphase *m_narrowphase;
 
@@ -36,7 +37,7 @@ namespace Positional
 		World();
 		~World();
 
-		template <typename T>
+		template <class T>
 		Ref<Body> createBody(const Vec3 &position, const Quat &rotation)
 		{
 			return m_bodies.store(Body::create<T>(this, position, rotation));
@@ -47,6 +48,19 @@ namespace Positional
 		Ref<Collider> createBoxCollider(const Ref<Body> &body, const Vec3 &center, const Quat &rotation, const Vec3 &extents, const Float &density, const Float &staticFriction, const Float &dynamicFriction, const Float &bounciness);
 		Ref<Collider> createCapsuleCollider(const Ref<Body> &body, const Vec3 &center, const Quat &rotation, const Float &radius, const Float &length, const Float &density, const Float &staticFriction, const Float &dynamicFriction, const Float &bounciness);
 		void destroyCollider(Ref<Collider> ref);
+
+		template <class ConstraintT, class DataT, typename... DataArgs>
+		Ref<Constraint> createConstraint(const Ref<Body> &bodyA, const Ref<Body> &bodyB, DataArgs &&...dataArgs)
+		{
+			Constraint joint = Constraint::create<ConstraintT, DataT>();
+			joint.init<DataT>(bodyA, bodyB, dataArgs...);
+			return m_constraints.store(joint);
+		}
+
+		void destroyConstraint(Ref<Constraint> ref)
+		{
+			m_constraints.erase(ref);
+		}
 
 		void raycast(const Ray &ray, const Float &maxDistance, const UInt32 &mask, vector<RaycastResult> &results) const;
 		void forEachBody(const function<void(const Ref<Body> &)> &callback);

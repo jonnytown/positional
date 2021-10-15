@@ -29,27 +29,25 @@ namespace Positional
 			m_solveVelocities(*this, dt, dtInvSq);
 		}
 
-		template<typename T>
+		template<class T>
 		T *getData() const { return static_cast<T*>(data.get());}
 
-		
-
-		template <class ConstraintT, class DataT, class... DataArgs>
+		template <class ConstraintT, class DataT>
 		static Constraint create()
 		{
 			Constraint constraint;
+			constraint.m_solvePositions = ConstraintT::solvePositions;
+			constraint.m_solveVelocities = ConstraintT::solveVelocities;
 			constraint.data = make_shared<DataT>();
 			return constraint;
 		}
 
-		template <class ConstraintT, class DataT, class... DataArgs>
+		template <class DataT, typename... DataArgs>
 		void init(const Ref<Body> &first, const Ref<Body> &second, DataArgs &&...dataArgs)
 		{
 			bodyA = first;
 			bodyB = second;
 			getData<DataT>()->init(dataArgs...);
-			m_solvePositions = ConstraintT::solvePositions;
-			m_solveVelocities = ConstraintT::solveVelocities;
 		}
 
 		optional<World *> getWorld() const
@@ -117,41 +115,6 @@ namespace Positional
 			{
 				bodyB.get().applyCorrection(correction, posB, velLevel);
 			}
-		}
-
-		void applyVelocityDamping(const Float& damping, const Vec3 &posA, const Vec3 &posB, const Float &dt, const Float& dtInvSq)
-		{
-			Vec3 vel(0);
-			if (bodyB.valid())
-			{
-				const Body& body = bodyB.get();
-				vel = body.getVelocityAt(posB);
-			}
-
-			if (bodyA.valid())
-			{
-				const Body& body = bodyA.get();
-				vel = vel - body.getVelocityAt(posA);
-			}
-			vel = vel * Math::min(damping * dt, 1);
-			applyCorrections(vel, 0, dtInvSq, true, optional<Vec3>(posA), optional<Vec3>(posB));
-		}
-
-		void applyAngularVelocityDamping(const Float &damping, const Float& dt, const Float& dtInvSq)
-		{
-			Vec3 omega(0);
-			if (bodyB.valid())
-			{
-				omega = bodyB.get().velocity.angular;
-			}
-
-			if (bodyA.valid())
-			{
-				omega = omega - bodyA.get().velocity.angular;
-			}
-
-			omega = omega * Math::min(damping * dt, 1.0);
-			applyCorrections(omega, 0, dtInvSq, true);
 		}
 	};
 }
