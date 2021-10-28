@@ -16,6 +16,40 @@ namespace Positional
 	template <typename T>
 	struct Store
 	{
+	private:
+		inline vector<UInt64> getKeys()
+		{
+			vector<UInt64> retval;
+			retval.reserve(m_handles.size());
+			for (auto const &element : m_handles)
+			{
+				retval.push_back(element.first);
+			}
+			return retval;
+		}
+
+		inline void fastErase(const UInt64 &id, const UInt64 &index)
+		{
+			m_handles.erase(id);
+
+			const UInt64 size = m_data.size();
+			const UInt64 last = size - 1;
+			if (size > 1 && index < last)
+			{
+				m_data[index] = m_data[last];
+				for (const auto &pair : m_handles)
+				{
+					if (pair.second->index == last)
+					{
+						pair.second->index = index;
+						break;
+					}
+				}
+			}
+			m_data.pop_back();
+		}
+
+	public:
 		template <typename>
 		friend struct Ref;
 
@@ -23,9 +57,9 @@ namespace Positional
 
 		~Store()
 		{
-			for (const auto &[key, ref] : m_refs)
+			for (const auto &[key, handle] : m_handles)
 			{
-				ref->store = NULL;
+				handle->store = NULL;
 			}
 		}
 
@@ -42,10 +76,10 @@ namespace Positional
 			auto id = m_nextId++;
 			auto idx = m_data.size() - 1;
 
-			auto ref = make_shared<Handle<T>>(id, idx, this);
-			m_refs.insert_or_assign(id, ref);
+			auto handle = make_shared<Handle<T>>(id, idx, this);
+			m_handles.insert_or_assign(id, handle);
 
-			return Ref<T>(ref);
+			return Ref<T>(handle);
 		}
 
 		bool erase(const Ref<T> &ref)
@@ -61,44 +95,39 @@ namespace Positional
 				return false;
 			}
 
+			const UInt64 index = shPtr->index;
 			shPtr->store = NULL;
-			m_refs.erase(shPtr->id);
-			m_data.erase(m_data.begin() + shPtr->index);
-
-			for (const auto &[key, r] : m_refs)
-			{
-				if (r->index > shPtr->index)
-				{
-					r->index--;
-				}
-			}
+			fastErase(shPtr->id, shPtr->index);
 
 			return true;
 		}
 
 		void erase(const function<bool(const Ref<T> &elRef)> &predicate)
 		{
-			for (const auto &[key, ref] : m_refs)
+			const auto keys = getKeys();
+			for (const auto &key : keys)
 			{
+				auto handle = m_handles.at(key);
+				Ref<T> ref(handle);
 				if (predicate(ref))
 				{
-					m_data.erase(m_data.begin() + ref->index);
-					m_refs.erase(key);
+					fastErase(handle->id, handle->index);
 				}
 			}
 		}
 
 		void forEach(const function<void(const Ref<T> &elRef)> &callback)
 		{
-			for (const auto &[key, ref] : m_refs)
+			for (const auto &[key, handle] : m_handles)
 			{
+				Ref<T> ref(handle);
 				callback(ref);
 			}
 		}
 
 	private:
 		UInt64 m_nextId;
-		unordered_map<UInt64, shared_ptr<Handle<T>>> m_refs;
+		unordered_map<UInt64, shared_ptr<Handle<T>>> m_handles;
 		vector<T> m_data;
 	};
 
@@ -170,9 +199,9 @@ namespace Positional
 		}
 
 	private:
-		Ref(shared_ptr<Handle<T>> ref)
+		Ref(shared_ptr<Handle<T>> handle)
 		{
-			m_ptr = weak_ptr<Handle<T>>(ref);
+			m_ptr = weak_ptr<Handle<T>>(handle);
 		}
 
 		weak_ptr<Handle<T>> m_ptr;
