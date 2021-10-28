@@ -42,19 +42,16 @@ namespace Positional
 			}
 			return false;
 		});
-		
-		// TODO: should we auto-destroy constraints?
-		/*
+
 		m_constraints.erase([&, this](const Ref<Constraint> &elRef)
 		{
 			const Constraint &constraint = elRef.get();
-			// TODO: only return true if both refs will be invalid
-			if (constraint.bodyA == ref || constraint.bodyB == ref)
+			if ((constraint.bodyA == ref && !constraint.bodyB.valid()) || (constraint.bodyB == ref && !constraint.bodyA.valid()))
 			{
 				return true;
 			}
 			return false;
-		});*/
+		});
 
 		m_bodies.erase(ref);
 	}
