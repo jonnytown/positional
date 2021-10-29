@@ -223,15 +223,35 @@ namespace Positional
 		m_contactCount = 0;
 		m_broadphase->update(deltaTime);
 		m_broadphase->forEachOverlapPair([&, this](const pair<Ref<Collider>, Ref<Collider>> &pair)
-		{
+		{	
+			const Ref<Body> &bodyA = pair.first.get().body();
+			const Ref<Body> &bodyB = pair.second.get().body();
+			bool ignoreCollisions = false;
+			m_constraints.first([&](const Ref<Constraint> &ref)
+			{	
+				const Constraint &constraint = ref.get();
+				if ((constraint.bodyA == bodyA && constraint.bodyB == bodyB) || (constraint.bodyA == bodyB && constraint.bodyB == bodyA))
+				{
+					ignoreCollisions = constraint.ignoreCollisions;
+					return true;
+				}
+				return false;
+			});
+
+			if (ignoreCollisions)
+			{
+				return;
+			}
+
 			if (m_contactCount >= m_contacts.size())
 			{
 				m_contacts.push_back(Constraint::create<ContactConstraint, ContactConstraint::Data>());
 			}
 
 			m_contacts[m_contactCount].init<ContactConstraint::Data>(
-				pair.first.get().body(),
-				pair.second.get().body(),
+				bodyA,
+				bodyB,
+				false,
 				pair.first,
 				pair.second,
 				m_narrowphase

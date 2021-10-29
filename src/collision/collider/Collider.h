@@ -121,7 +121,6 @@ namespace Positional
 		Float restitution;
 
 		Ref<Body> body() const { return m_body; };
-
 		bool isStatic() const { return m_isStatic; }
 
 		/*

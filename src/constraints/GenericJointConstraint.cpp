@@ -187,32 +187,32 @@ namespace Positional
 			{
 				getPositions(constraint, d, posA, posB);
 
-				Quat rotA = d->poseA.rotation;
-				if (constraint.bodyA.valid())
+				Quat rotB = d->poseB.rotation;
+				if (constraint.bodyB.valid())
 				{
-					rotA = constraint.bodyA.get().pose.rotation * rotA;
+					rotB = constraint.bodyB.get().pose.rotation * rotB;
 				}
 
-				const Vec3 n = rotA * Vec3::pos_x;
+				const Vec3 n = rotB * Vec3::pos_x;
 				const Vec3 corr = (posB - posA).project(n);
 
 				constraint.applyCorrections(corr, d->positionCompliance, dtInvSq, false, posA, posB);
 			}
 
-			const UInt8 hasPosLimits = d->hasLimits & (DOF::Linear | DOF::Planar);
+			const UInt8 hasPosLimits = (d->hasLimits & (DOF::Linear | DOF::Planar));
 
 			// linear limits
-			if (hasPosLimits == DOF::Linear)
+			if ((d->dof & DOF::Linear) == DOF::Linear && hasPosLimits == DOF::Linear)
 			{
 				getPositions(constraint, d, posA, posB);
 
-				Quat rotA = d->poseA.rotation;
-				if (constraint.bodyA.valid())
+				Quat rotB = d->poseB.rotation;
+				if (constraint.bodyB.valid())
 				{
-					rotA = constraint.bodyA.get().pose.rotation * rotA;
+					rotB = constraint.bodyB.get().pose.rotation * rotB;
 				}
 
-				const Vec3 n = rotA * Vec3::pos_x;
+				const Vec3 n = rotB * Vec3::pos_x;
 
 				Vec3 corr = (posB - posA).project(n);
 				const Float lenSq = corr.lengthSq();
@@ -228,13 +228,13 @@ namespace Positional
 			{
 				getPositions(constraint, d, posA, posB);
 
-				Quat rotA = d->poseA.rotation;
-				if (constraint.bodyA.valid())
+				Quat rotB = d->poseB.rotation;
+				if (constraint.bodyB.valid())
 				{
-					rotA = constraint.bodyA.get().pose.rotation * rotA;
+					rotB = constraint.bodyB.get().pose.rotation * rotB;
 				}
 
-				const Vec3 n = rotA * Vec3::pos_x;
+				const Vec3 n = rotB * Vec3::pos_x;
 
 				Vec3 corr = (posB - posA).projectOnPlane(n);
 				const Float lenSq = corr.lengthSq();
@@ -246,8 +246,10 @@ namespace Positional
 				}
 			}
 			// spherical limits
-			if (hasPosLimits != 0)
+			else if (hasPosLimits != 0)
 			{
+				getPositions(constraint, d, posA, posB);
+
 				Vec3 corr = posB - posA;
 				const Float lenSq = corr.lengthSq();
 				if (lenSq > d->linearLimit * d->linearLimit)
@@ -264,13 +266,13 @@ namespace Positional
 			Vec3 posA, posB;
 			getPositions(constraint, d, posA, posB);
 
-			Quat rotA = d->poseA.rotation;
-			if (constraint.bodyA.valid())
+			Quat rotB = d->poseB.rotation;
+			if (constraint.bodyB.valid())
 			{
-				rotA = constraint.bodyA.get().pose.rotation * rotA;
+				rotB = constraint.bodyB.get().pose.rotation * rotB;
 			}
 
-			const Vec3 n = rotA * Vec3::pos_x;
+			const Vec3 n = rotB * Vec3::pos_x;
 			Vec3 corr = (posB - posA).projectOnPlane(n);
 
 			constraint.applyCorrections(corr, d->positionCompliance, dtInvSq, false, posA, posB);
@@ -282,7 +284,8 @@ namespace Positional
 				const Float lenSq = corr.lengthSq();
 				if (lenSq > d->linearLimit * d->linearLimit)
 				{
-					corr = corr * (d->linearLimit/Math::sqrt(lenSq));
+					const Float len = Math::sqrt(lenSq);
+					corr = corr * ((len - d->linearLimit)/len);
 					constraint.applyCorrections(corr, d->positionCompliance, dtInvSq, false, posA, posB);
 				}
 			}

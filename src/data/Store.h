@@ -124,6 +124,18 @@ namespace Positional
 				callback(ref);
 			}
 		}
+		
+		void first(const function<bool(const Ref<T> &elRef)> &predicate)
+		{
+			for (const auto &[key, handle] : m_handles)
+			{
+				Ref<T> ref(handle);
+				if (predicate(ref))
+				{
+					return;
+				}
+			}
+		}
 
 	private:
 		UInt64 m_nextId;

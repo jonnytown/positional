@@ -3,24 +3,6 @@
 
 namespace Positional::Collision
 {
-	struct SYM_PAIR_HASH
-	{
-		inline size_t operator()(const HandlePair &pair) const
-		{
-			hash<UInt32> hash;
-			return hash(pair.first) + hash(pair.second);
-		}
-	};
-
-	struct SYM_PAIR_EQ
-	{
-		inline bool operator()(const HandlePair &lhs, const HandlePair &rhs) const
-		{
-			return (lhs.first == rhs.first && lhs.second == rhs.second)
-				|| (lhs.first == rhs.second && lhs.second == rhs.first);
-		}
-	};
-
 #pragma region Public
 	UInt32 BoundsTree::add(const Bounds &bounds, const UInt32 &mask)
 	{
@@ -134,7 +116,7 @@ namespace Positional::Collision
 			return;
 		}
 
-		unordered_set<HandlePair, SYM_PAIR_HASH, SYM_PAIR_EQ> pairs;
+		unordered_set<HandlePair, HandlePair::SYM_HASH, HandlePair::SYM_EQ> pairs;
 
 		for (const UInt32 &leafHandle : m_leaves)
 		{

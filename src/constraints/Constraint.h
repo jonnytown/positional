@@ -18,6 +18,7 @@ namespace Positional
 		Ref<Body> bodyA;
 		Ref<Body> bodyB;
 		shared_ptr<void> data;
+		bool ignoreCollisions;
 
 		void solvePositions(const Float &dtInvSq)
 		{
@@ -43,10 +44,11 @@ namespace Positional
 		}
 
 		template <class DataT, typename... DataArgs>
-		void init(const Ref<Body> &first, const Ref<Body> &second, DataArgs &&...dataArgs)
+		void init(const Ref<Body> &first, const Ref<Body> &second, const bool &_ignoreCollisions, DataArgs &&...dataArgs)
 		{
 			bodyA = first;
 			bodyB = second;
+			ignoreCollisions = _ignoreCollisions;
 			getData<DataT>()->init(dataArgs...);
 		}
 

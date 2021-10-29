@@ -8,6 +8,7 @@
 #include "collision/collider/CapsuleCollider.h"
 #include <unordered_set>
 #include "data/Store.h"
+#include "data/IdPair.h"
 #include "collision/broadphase/IBroadphase.h"
 #include "collision/narrowphase/INarrowphase.h"
 #include "collision/narrowphase/RaycastResult.h"
@@ -27,10 +28,13 @@ namespace Positional
 		Collision::IBroadphase *m_broadphase;
 		Collision::INarrowphase *m_narrowphase;
 
-		Ref<Collider> addCollider(const Ref<Body> &body, const Collider &collider);
+		unordered_set<IdPair<UInt64>, IdPair<UInt64>::SYM_HASH, IdPair<UInt64>::SYM_EQ> m_ignoreBodies;
+		unordered_set<IdPair<UInt64>, IdPair<UInt64>::SYM_HASH, IdPair<UInt64>::SYM_EQ> m_ignoreColliders;
 
 		vector<Constraint> m_contacts;
 		UInt32 m_contactCount;
+
+		Ref<Collider> addCollider(const Ref<Body> &body, const Collider &collider);
 	public:
 		Vec3 gravity;
 
@@ -50,10 +54,10 @@ namespace Positional
 		void destroyCollider(Ref<Collider> ref);
 
 		template <class ConstraintT, class DataT, typename... DataArgs>
-		Ref<Constraint> createConstraint(const Ref<Body> &bodyA, const Ref<Body> &bodyB, DataArgs &&...dataArgs)
+		Ref<Constraint> createConstraint(const Ref<Body> &bodyA, const Ref<Body> &bodyB, const bool &ignoreCollisions, DataArgs &&...dataArgs)
 		{
 			Constraint joint = Constraint::create<ConstraintT, DataT>();
-			joint.init<DataT>(bodyA, bodyB, dataArgs...);
+			joint.init<DataT>(bodyA, bodyB, ignoreCollisions, dataArgs...);
 			return m_constraints.store(joint);
 		}
 

@@ -2,6 +2,7 @@
  * Bounds Tree (aka Bounding Volume Hierarchy)
  */
 #include "math/Math.h"
+#include "data/IdPair.h"
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -14,14 +15,7 @@ using namespace std;
 
 namespace Positional::Collision
 {
-	struct HandlePair
-	{
-		UInt32 first;
-		UInt32 second;
-
-		HandlePair(const UInt32& _first, const UInt32& _second) : first(_first), second(_second) {}
-	};
-
+	typedef IdPair<UInt32> HandlePair;
 	typedef function<void(const UInt32 &)> ResultCallback;
 	typedef function<void(const HandlePair &)> ResultPairCallback;
 
