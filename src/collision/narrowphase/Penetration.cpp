@@ -61,12 +61,12 @@ namespace Positional::Collision
 	bool Penetration::capsuleCapsule(const Collider &a, const Collider &b, ContactPoint &outContact)
 	{
 		const Float al_2 = a.shape.length / 2;
-		const Vec3 a0 = a.pointToWorld(Vec3(0, -al_2, 0));
-		const Vec3 a1 = a.pointToWorld(Vec3(0, al_2, 0));
+		const Vec3 a0 = a.pointToWorld(Vec3(-al_2, 0, 0));
+		const Vec3 a1 = a.pointToWorld(Vec3(al_2, 0, 0));
 
 		const Float bl_2 = b.shape.length / 2;
-		const Vec3 b0 = b.pointToWorld(Vec3(0, -bl_2, 0));
-		const Vec3 b1 = b.pointToWorld(Vec3(0, bl_2, 0));
+		const Vec3 b0 = b.pointToWorld(Vec3(-bl_2, 0, 0));
+		const Vec3 b1 = b.pointToWorld(Vec3(bl_2, 0, 0));
 
 		Vec3 nearA, nearB;
 		GeomUtil::nearestOnSegments(a0, a1, b0, b1, nearA, nearB);
@@ -89,8 +89,8 @@ namespace Positional::Collision
 		const Vec3 c = sphere.pointToWorld(Vec3::zero);
 
 		const Float bl_2 = capsule.shape.length / 2;
-		const Vec3 b0 = capsule.pointToWorld(Vec3(0, -bl_2, 0));
-		const Vec3 b1 = capsule.pointToWorld(Vec3(0, bl_2, 0));
+		const Vec3 b0 = capsule.pointToWorld(Vec3(-bl_2, 0, 0));
+		const Vec3 b1 = capsule.pointToWorld(Vec3(bl_2, 0, 0));
 
 		const Vec3 b = GeomUtil::nearestOnSegment(c, b0, b1);
 		const Vec3 toC = c - b;

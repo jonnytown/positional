@@ -19,6 +19,10 @@ using namespace std;
 
 namespace Positional
 {
+	typedef function<void(const RaycastResult &)> RaycastCallback;
+	typedef function<void(const CollisionResult &)> CollisionCallback;
+	typedef function<void(const Ref<Body> &)> BodyCallback;
+
 	class World
 	{
 	private:
@@ -48,9 +52,13 @@ namespace Positional
 		}
 		void destroyBody(Ref<Body> ref);
 
-		Ref<Collider> createSphereCollider(const Ref<Body> &body, const Vec3 &center, const Float &radius, const Float &density, const Float &staticFriction, const Float &dynamicFriction, const Float &bounciness);
-		Ref<Collider> createBoxCollider(const Ref<Body> &body, const Vec3 &center, const Quat &rotation, const Vec3 &extents, const Float &density, const Float &staticFriction, const Float &dynamicFriction, const Float &bounciness);
-		Ref<Collider> createCapsuleCollider(const Ref<Body> &body, const Vec3 &center, const Quat &rotation, const Float &radius, const Float &length, const Float &density, const Float &staticFriction, const Float &dynamicFriction, const Float &bounciness);
+		template <class ColliderT, typename... ShapeArgs>
+		Ref<Collider> createCollider(const Ref<Body> &body, const Vec3 &position, const Quat &rotation, const Float &density, const Float &staticFriction, const Float &dynamicFriction, const Float &bounciness, ShapeArgs &&...shapeArgs)
+		{
+			auto collider = Collider::create<ColliderT>(body, position, rotation, Shape(shapeArgs...), density, staticFriction, dynamicFriction, bounciness);
+			return addCollider(body, collider);
+		}
+		
 		void destroyCollider(Ref<Collider> ref);
 
 		template <class ConstraintT, class DataT, typename... DataArgs>
@@ -66,11 +74,11 @@ namespace Positional
 			m_constraints.erase(ref);
 		}
 
-		void raycast(const Ray &ray, const Float &maxDistance, const UInt32 &mask, vector<RaycastResult> &results) const;
-		void forEachBody(const function<void(const Ref<Body> &)> &callback);
+		void raycast(const Ray &ray, const UInt32 &mask, const Float &maxDistance, const RaycastCallback &callback) const;
+		void forEachBody(const BodyCallback &callback);
 		void forEachBoundsNode(const function <void(const Bounds &bounds)> &callback) const;
-		void forEachBroadPair(const function<void(const pair<Ref<Collider>, Ref<Collider>>&)> &callback) const;
-		void forEachCollision(const function<void(const CollisionResult &)> &callback) const;
+		void forEachBroadPair(const Collision::OverlapCallback &callback) const;
+		void forEachCollision(const CollisionCallback &callback) const;
 
 		void updateBroadphase();
 		void simulate(const Float &deltaTime, const UInt32 &subSteps);

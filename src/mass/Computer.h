@@ -264,22 +264,45 @@ namespace Positional::Mass
 		{
 			// Compute mass of capsule
 			Float m = capsuleVolume(radius, length) * density;
-
+			
 			Float r2 = radius * radius;
-			Float l2 = length * length;
-			Float lr2 = length * r2;
+			Float l_2 = length * 0.5;
+			Float l2 = l_2 * l_2;
+			Float lr2 = l_2 * r2;
 			Float r3x8_15 = r2 * radius * (8.0 / 15.0);
 
-			Float t = Math::Pi * r2;
+			Float t = Math::Pi * r2 * density;
 			Float i1 = t * (r3x8_15 + lr2);
-			Float i2 = t * (r3x8_15 + (lr2 * (3.0 / 2.0)) + (l2 * radius * (4.0 / 3.0)) + (l2 * length * (2.0 / 3.0)));
+			Float i2 = t * (r3x8_15 + (lr2 * (3.0 / 2.0)) + (l2 * radius * (4.0 / 3.0)) + (l2 * l_2 * (2.0 / 3.0)));
 
-			setDiagonal(Vec3(i2 * density, i1 * density, i2 * density), m);
+			setDiagonal(Vec3(i1, i2, i2), m);
 		}
 
 		void setCapsule(const Float &radius, const Float &length, const Vec3 &translation, const Quat &rotation, const Float &density)
 		{
 			setCapsule(radius, length, density);
+			rotate(rotation);
+			translate(translation);
+		}
+
+		void setCylinder(const Float &radius, const Float &length, const Float &density)
+		{
+			// Compute mass of capsule
+			Float m = cylinderVolume(radius, length) * density;
+
+			Float r2 = radius * radius;
+			Float l_2 = length * 0.5;
+			Float m_2 = m * 0.5;
+
+			Float i1 = r2*m_2;
+			Float i2 = (3.0 * r2 + 4.0 * l_2 * l_2) * m_2 / 6.0;
+
+			setDiagonal(Vec3(i1, i2, i2), m);
+		}
+
+		void setCylinder(const Float &radius, const Float &length, const Vec3 &translation, const Quat &rotation, const Float &density)
+		{
+			setCylinder(radius, length, density);
 			rotate(rotation);
 			translate(translation);
 		}

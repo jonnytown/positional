@@ -17,7 +17,12 @@ namespace Positional::Mass
 
 	inline static Float capsuleVolume(const Float &radius, const Float &length)
 	{
-		return sphereVolume(radius) + Math::Pi * radius * radius * (2 * length);
+		return sphereVolume(radius) + Math::Pi * radius * radius * length;
+	}
+
+	inline static Float cylinderVolume(const Float &radius, const Float &length)
+	{
+		return Math::Pi * radius * radius * length;
 	}
 }
 

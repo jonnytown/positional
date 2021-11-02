@@ -10,30 +10,23 @@
 #include "Polytope.h"
 #include "ContactPoint.h"
 #include <functional>
+#include "collision/collider/Collider.h"
 
-namespace Positional
+namespace Positional::Collision
 {
-	struct Collider;
-	struct BoxCollider;
-	struct SphereCollider;
-	struct CapsuleCollider;
-
-	namespace Collision
+	static struct Penetration 
 	{
-		static struct Penetration 
-		{
-			static bool sphereSphere(const Collider &a, const Collider &b, ContactPoint &outContact);
-			static bool capsuleCapsule(const Collider &a, const Collider &b, ContactPoint &outContact);
-			static bool boxSphere(const Collider &box, const Collider &sphere, const bool &swapped, ContactPoint &outContact);
-			static bool sphereCapsule(const Collider &sphere, const Collider &capsule, const bool &swapped, ContactPoint &outContact);
+		static bool sphereSphere(const Collider &a, const Collider &b, ContactPoint &outContact);
+		static bool capsuleCapsule(const Collider &a, const Collider &b, ContactPoint &outContact);
+		static bool boxSphere(const Collider &box, const Collider &sphere, const bool &swapped, ContactPoint &outContact);
+		static bool sphereCapsule(const Collider &sphere, const Collider &capsule, const bool &swapped, ContactPoint &outContact);
 
-			static bool gjk_epa(const Collider &a, const Collider &b, ContactPoint &outContact);
-			static bool gjk(const Collider& a, const Collider& b, Simplex& outSimplex);
-			static void epa(const Collider &a, const Collider &b, const UInt8 &count, Polytope &outPolytope, ContactPoint &outContact);
+		static bool gjk_epa(const Collider &a, const Collider &b, ContactPoint &outContact);
+		static bool gjk(const Collider& a, const Collider& b, Simplex& outSimplex);
+		static void epa(const Collider &a, const Collider &b, const UInt8 &count, Polytope &outPolytope, ContactPoint &outContact);
 
-		private:
-			Penetration() = delete;
-		};
-	}
+	private:
+		Penetration() = delete;
+	};
 }
 #endif // PENETRATION_H

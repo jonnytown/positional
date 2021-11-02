@@ -37,7 +37,7 @@ namespace Positional::Collision
 		unordered_map<UInt32, Node> m_staticNodes;
 		Float m_padFactor;
 
-		UInt32 Find(const unordered_map<UInt32, Node> &nodeMap, const Ref<Collider> &collider) const;
+		UInt32 find(const unordered_map<UInt32, Node> &nodeMap, const Ref<Collider> &collider) const;
 
 	public:
 		DBTBroadphase(const Float &padFactor = 2.0) : m_padFactor(padFactor) {}
@@ -50,8 +50,8 @@ namespace Positional::Collision
 		virtual void removeStatic(const Ref<Collider> &collider) override;
 		virtual void update(const Float &dt) override;
 
-		virtual void raycast(const Ray &ray, const Float &maxDistance, const UInt32 &mask, vector<Ref<Collider>> &results) const override;
-		virtual void forEachOverlapPair(const function<void(pair<Ref<Collider>, Ref<Collider>>)> &callback) const override;
+		virtual void raycast(const Ray &ray, const UInt32 &mask, const Float &maxDistance, const RaycastCallback &callback) const override;
+		virtual void forEachOverlapPair(const OverlapCallback &callback) const override;
 #pragma endregion ABroadphase Interface
 
 		void forEachNode(const function<void(Bounds)> &callback)

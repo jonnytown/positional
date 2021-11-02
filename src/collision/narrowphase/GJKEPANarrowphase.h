@@ -2,7 +2,7 @@
  * GJK EPA Narrowphase implementation
  */
 #ifndef GJK_EPA_NARROWPHASE_H
-#define GJK_EPA_INARROWPHASE_H
+#define GJK_EPA_NARROWPHASE_H
 
 #include "INarrowphase.h"
 

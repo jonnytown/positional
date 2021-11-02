@@ -199,7 +199,7 @@ namespace Positional
 		return false;
 	}
 
-	bool GeomUtil::raycastCylinder(const Vec3 &c0, const Vec3 &c1, const Float &length, const Float &radius, const Vec3 &r0, const Vec3 &n, const Float &d, Vec3 &outPoint, Vec3 &outNormal, Float &outDistance)
+	bool GeomUtil::raycastCylinderBody(const Vec3 &c0, const Vec3 &c1, const Float &length, const Float &radius, const Vec3 &r0, const Vec3 &n, const Float &d, Vec3 &outPoint, Vec3 &outNormal, Float &outDistance)
 	{
 		const Vec3 AB = c1 - c0;
 		const Vec3 AO = r0 - c0;
@@ -305,12 +305,43 @@ namespace Positional
 			return false;
 		}
 
-		if (raycastCylinder(c0, c1, length, radius, r0, n, d, outPoint, outNormal, outDistance))
+		if (raycastCylinderBody(c0, c1, length, radius, r0, n, d, outPoint, outNormal, outDistance))
 		{
 			return true;
 		}
 
 		return raycastCaps(c0, c1, radius, r0, n, d, outPoint, outNormal, outDistance);
+	}
+
+	bool GeomUtil::raycastCylinder(const Vec3 &c0, const Vec3 &c1, const Vec3 &axis, const Float &length, const Float &radius, const Vec3 &r0, const Vec3 &n, const Float &d, Vec3 &outPoint, Vec3 &outNormal, Float &outDistance)
+	{
+		// cylinder is flat
+		if (c0 == c1)
+		{
+			return raycastCircle(c0, axis, radius, false, r0, n, d, outPoint, outNormal, outDistance);
+		}
+
+		// ray starts inside cylinder
+		Vec3 r0p = nearestOnSegment(r0, c0, c1);
+		const Vec3 u = c1 - c0;
+		const Vec3 v = r0 - c0;
+		const Float t = Math::clamp(v.dot(u) / u.lengthSq(), 0, 1);
+		if (t > 0 && t < 1 && r0.distanceSq(c0 + u * t) < radius * radius)
+		{
+			return false;
+		}
+
+		if (raycastCylinderBody(c0, c1, length, radius, r0, n, d, outPoint, outNormal, outDistance))
+		{
+			return true;
+		}
+
+		if (GeomUtil::raycastCircle(c0, -axis, radius, true, r0, n, d, outPoint, outNormal, outDistance))
+		{
+			return true;
+		}
+
+		return GeomUtil::raycastCircle(c1, axis, radius, true, r0, n, d, outPoint, outNormal, outDistance);
 	}
 
 	bool GeomUtil::raycastTriangle(const Vec3 &a, const Vec3 &b, const Vec3 &c, const Vec3 &r0, const Vec3 &rn, const Float &maxDist, Vec3 &outPoint, Vec3 &outNormal, Float &outDistance)
@@ -352,5 +383,32 @@ namespace Positional
 		}
 
 		return false;
+	}
+
+	bool GeomUtil::raycastCircle(const Vec3 &center, const Vec3 &normal, const Float &radius, const bool &oneSided, const Vec3 &r0, const Vec3 &rn, const Float &maxDist, Vec3 &outPoint, Vec3 &outNormal, Float &outDistance)
+	{
+		const Float nDot = normal.dot(rn);
+		if (oneSided && nDot >= 0)
+		{
+			return false;
+		}
+
+		const Float t = (center - r0).dot(normal)/nDot;
+
+		if (t < 0 || t > maxDist)
+		{
+			return false;
+		}
+
+		const Vec3 p = r0 + rn * t;
+		if (center.distanceSq(p) > radius*radius)
+		{
+			return false;
+		}
+
+		outPoint = p;
+		outNormal = normal;
+		outDistance = t;
+		return true;
 	}
 }

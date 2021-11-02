@@ -23,7 +23,7 @@ namespace Positional::Collision
 
 	void DBTBroadphase::remove(const Ref<Collider> &ref)
 	{
-		UInt32 handle = Find(m_dynamicNodes, ref);
+		UInt32 handle = find(m_dynamicNodes, ref);
 		if (handle != NOT_FOUND)
 		{
 			m_dynamicTree.remove(handle);
@@ -33,7 +33,7 @@ namespace Positional::Collision
 
 	void DBTBroadphase::removeStatic(const Ref<Collider> &ref)
 	{
-		UInt32 handle = Find(m_staticNodes, ref);
+		UInt32 handle = find(m_staticNodes, ref);
 		if (handle != NOT_FOUND)
 		{
 			m_staticTree.remove(handle);
@@ -71,30 +71,30 @@ namespace Positional::Collision
 		}
 	}
 
-	void DBTBroadphase::raycast(const Ray &ray, const Float &maxDistance, const UInt32 &mask, vector<Ref<Collider>> &results) const
+	void DBTBroadphase::raycast(const Ray &ray, const UInt32 &mask, const Float &maxDistance, const RaycastCallback &callback) const
 	{
 		m_dynamicTree.raycast(
 			ray,
-			maxDistance,
 			mask,
-			[&, this](const UInt32 &handle)
+			maxDistance,
+			[&](const UInt32 &handle)
 			{
 				const Node &node = m_dynamicNodes.at(handle);
-				results.push_back(node.collider);
+				callback(node.collider);
 			});
 
 		m_staticTree.raycast(
 			ray,
-			maxDistance,
 			mask,
-			[&, this](const UInt32 &handle)
+			maxDistance,
+			[&](const UInt32 &handle)
 			{
 				const Node &node = m_staticNodes.at(handle);
-				results.push_back(node.collider);
+				callback(node.collider);
 			});
 	}
 
-	void DBTBroadphase::forEachOverlapPair(const function<void(pair<Ref<Collider>, Ref<Collider>>)> &callback) const
+	void DBTBroadphase::forEachOverlapPair(const OverlapCallback &callback) const
 	{
 		m_dynamicTree.forEachOverlapPair(
 			[&, this](const auto &pair)
@@ -124,7 +124,7 @@ namespace Positional::Collision
 		}
 	}
 
-	UInt32 DBTBroadphase::Find(const unordered_map<UInt32, Node> &nodeMap, const Ref<Collider> &collider) const
+	UInt32 DBTBroadphase::find(const unordered_map<UInt32, Node> &nodeMap, const Ref<Collider> &collider) const
 	{
 		for (const auto &[key, node] : nodeMap)
 		{

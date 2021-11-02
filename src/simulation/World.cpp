@@ -58,24 +58,6 @@ namespace Positional
 #pragma endregion // Bodies
 
 #pragma region Colliders
-	Ref<Collider> World::createSphereCollider(const Ref<Body> &body, const Vec3 &center, const Float &radius, const Float &density, const Float &staticFriction, const Float &dynamicFriction, const Float &bounciness)
-	{
-		auto collider = Collider::create<Collision::SphereCollider>(body, center, Quat::identity, Shape(radius), density, staticFriction, dynamicFriction, bounciness);
-		return addCollider(body, collider);
-	}
-
-	Ref<Collider> World::createBoxCollider(const Ref<Body> &body, const Vec3 &center, const Quat &rotation, const Vec3 &extents, const Float &density, const Float &staticFriction, const Float &dynamicFriction, const Float &bounciness)
-	{
-		auto collider = Collider::create<Collision::BoxCollider>(body, center, rotation, Shape(extents), density, staticFriction, dynamicFriction, bounciness);
-		return addCollider(body, collider);
-	}
-
-	Ref<Collider> World::createCapsuleCollider(const Ref<Body> &body, const Vec3 &center, const Quat &rotation, const Float &radius, const Float &length, const Float &density, const Float &staticFriction, const Float &dynamicFriction, const Float &bounciness)
-	{
-		auto collider = Collider::create<Collision::CapsuleCollider>(body, center, rotation, Shape(radius, length), density, staticFriction, dynamicFriction, bounciness);
-		return addCollider(body, collider);
-	}
-
 	Ref<Collider> World::addCollider(const Ref<Body> &bodyRef, const Collider &collider)
 	{
 		auto ref = m_colliders.store(collider);
@@ -130,32 +112,18 @@ namespace Positional
 #pragma endregion // Colliders
 
 #pragma region Queries
-	void World::raycast(const Ray &ray, const Float &maxDistance, const UInt32 &mask, vector<RaycastResult> &results) const
+	void World::raycast(const Ray &ray, const UInt32 &mask, const Float &maxDistance, const RaycastCallback &callback) const
 	{
-		vector<Ref<Collider>> broadResults;
-		m_broadphase->raycast(ray, maxDistance, mask, broadResults);
-
-		for (UInt32 i = 0, count = broadResults.size(); i < count; ++i)
-		{
-			if (broadResults[i].valid())
+		m_broadphase->raycast(ray, mask, maxDistance, [&](Ref<Collider> ref) {
+			// Vec3 point, normal;
+			// Float distance;
+			RaycastResult result;
+			if (ref.get().raycast(ray, maxDistance, result.point, result.normal, result.distance))
 			{
-				Vec3 point, normal;
-				Float distance;
-				if (broadResults[i].get().raycast(ray, maxDistance, point, normal, distance))
-				{
-					UInt32 idx = results.size();
-					for (UInt32 j = 0, jcount = results.size(); j < jcount; ++j)
-					{
-						if (distance < results[j].distance)
-						{
-							idx = j;
-							break;
-						}
-					}
-					results.emplace(results.begin() + idx, broadResults[i], point, normal, distance);
-				}
+				result.collider = ref;
+				callback(result);
 			}
-		}
+		});
 	}
 
 	void World::forEachBody(const function<void(const Ref<Body> &)> &callback)
@@ -172,7 +140,7 @@ namespace Positional
 		}
 	}
 
-	void World::forEachBroadPair(const function<void(const pair<Ref<Collider>, Ref<Collider>> &)> &callback) const
+	void World::forEachBroadPair(const Collision::OverlapCallback &callback) const
 	{
 		m_broadphase->forEachOverlapPair(callback);
 	}

@@ -12,6 +12,9 @@ using namespace std;
 
 namespace Positional::Collision
 {
+	typedef function<void(const Ref<Collider> &)> RaycastCallback;
+	typedef function<void(const pair<Ref<Collider>, Ref<Collider>> &)> OverlapCallback;
+
 	class IBroadphase
 	{
 	public:
@@ -22,8 +25,8 @@ namespace Positional::Collision
 		virtual void removeStatic(const Ref<Collider> &collider) = 0;
 		virtual void update(const Float &dt) = 0;
 
-		virtual void raycast(const Ray &ray, const Float &maxDistance, const UInt32 &mask, vector<Ref<Collider>> &results) const = 0;
-		virtual void forEachOverlapPair(const function<void(pair<Ref<Collider>, Ref<Collider>>)> &callback) const = 0;
+		virtual void raycast(const Ray &ray, const UInt32 &mask, const Float &maxDistance, const RaycastCallback &callback) const = 0;
+		virtual void forEachOverlapPair(const OverlapCallback &callback) const = 0;
 	};
 }
 #endif // IBROADPHASE_H

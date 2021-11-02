@@ -9,7 +9,7 @@
 #include "mass/Computer.h"
 #include "Collider.h"
 
-namespace Positional::Collision
+namespace Positional
 {
 	struct SphereCollider final
 	{

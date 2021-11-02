@@ -10,7 +10,7 @@
 #include "mass/Computer.h"
 #include "Collider.h"
 
-namespace Positional::Collision
+namespace Positional
 {
 	struct CapsuleCollider final
 	{
@@ -19,8 +19,8 @@ namespace Positional::Collision
 		static Bounds bounds(const Collider &collider)
 		{
 			const Float l_2 = collider.shape.length * 0.5;
-			const Vec3 c0 = collider.pointToWorld(Vec3(0, -l_2, 0));
-			const Vec3 c1 = collider.pointToWorld(Vec3(0, l_2, 0));
+			const Vec3 c0 = collider.pointToWorld(Vec3(-l_2, 0, 0));
+			const Vec3 c1 = collider.pointToWorld(Vec3(l_2, 0, 0));
 
 			Bounds bounds = Bounds(c0, Vec3(collider.shape.radius));
 			bounds.merge(Bounds(c1, Vec3(collider.shape.radius)));
@@ -32,15 +32,15 @@ namespace Positional::Collision
 		static bool raycast(const Collider &collider, const Ray &ray, const Float &maxDistance, Vec3 &outPoint, Vec3 &outNormal, Float &outDistance)
 		{
 			const Float l_2 = collider.shape.length * 0.5;
-			const Vec3 c0 = collider.pointToWorld(Vec3(0, -l_2, 0));
-			const Vec3 c1 = collider.pointToWorld(Vec3(0, l_2, 0));
+			const Vec3 c0 = collider.pointToWorld(Vec3(-l_2, 0, 0));
+			const Vec3 c1 = collider.pointToWorld(Vec3(l_2, 0, 0));
 			return GeomUtil::raycastCapsule(c0, c1, collider.shape.length, collider.shape.radius, ray.origin, ray.normal(), maxDistance, outPoint, outNormal, outDistance);
 		}
 
 		static Vec3 localSupport(const Collider &collider, const Vec3 &axis)
 		{
 			const Float l_2 = collider.shape.length * 0.5;
-			const Vec3 c[2] = {Vec3(0, -l_2, 0), Vec3(0, l_2, 0)};
+			const Vec3 c[2] = {Vec3(-l_2, 0, 0), Vec3(l_2, 0, 0)};
 
 			const Float dot0 = axis.dot(c[0]);
 			const Float dot1 = axis.dot(c[1]);

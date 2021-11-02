@@ -43,7 +43,7 @@ namespace Positional::Collision
 		m_leaves.erase(handle);
 	}
 
-	void BoundsTree::raycast(const Ray &ray, const Float &maxDistance, const UInt32 &mask, const ResultCallback &resultsCallback) const
+	void BoundsTree::raycast(const Ray &ray, const UInt32 &mask, const Float &maxDistance, const ResultCallback &resultsCallback) const
 	{
 		if (m_root == NOT_FOUND)
 		{

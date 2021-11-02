@@ -11,7 +11,7 @@ namespace Positional
 	private:
 		GeomUtil() = delete;
 		static bool raycastCaps(const Vec3 &c0, const Vec3 &c1, const Float &radius, const Vec3 &r0, const Vec3 &n, const Float &d, Vec3 &outPoint, Vec3 &outNormal, Float &outDistance);
-
+		static bool raycastCylinderBody(const Vec3 &c0, const Vec3 &c1, const Float &length, const Float &radius, const Vec3 &r0, const Vec3 &n, const Float &d, Vec3 &outPoint, Vec3 &outNormal, Float &outDistance);
 	public:
 		inline static Vec3 nearestOnSegment(const Vec3 &point, const Vec3 &a, const Vec3 &b)
 		{
@@ -59,12 +59,11 @@ namespace Positional
 		static bool raycastBox(const Vec3 &extents, const Vec3 &r0, const Vec3 &n, const Vec3 &ni, const Float &d, Vec3 &outPoint, Vec3 &outNormal, Float &outDistance);
 		static bool raycastSphere(const Vec3 &center, const Float &radius, const Vec3 &r0, const Vec3 &n, const Float &d, Vec3 &outPoint, Vec3 &outNormal, Float &outDistance);
 		static bool raycastCapsule(const Vec3 &c0, const Vec3 &c1, const Float &length, const Float &radius, const Vec3 &r0, const Vec3 &n, const Float &d, Vec3 &outPoint, Vec3 &outNormal, Float &outDistance);
+		static bool raycastCylinder(const Vec3 &c0, const Vec3 &c1, const Vec3 &axis, const Float &length, const Float &radius, const Vec3 &r0, const Vec3 &n, const Float &d, Vec3 &outPoint, Vec3 &outNormal, Float &outDistance);
 		static bool raycastTriangle(const Vec3 &a, const Vec3 &b, const Vec3 &c, const Vec3 &r0, const Vec3 &rn, const Float &maxDist, Vec3 &outPoint, Vec3 &outNormal, Float &outDistance);
+		static bool raycastCircle(const Vec3 &center, const Vec3 &normal, const Float &radius, const bool &oneSided, const Vec3 &r0, const Vec3 &rn, const Float &maxDist, Vec3 &outPoint, Vec3 &outNormal, Float &outDistance);
 
-		/*
-		* Raycast cylinder without end faces
-		*/
-		static bool raycastCylinder(const Vec3 &c0, const Vec3 &c1, const Float &length, const Float &radius, const Vec3 &r0, const Vec3 &n, const Float &d, Vec3 &outPoint, Vec3 &outNormal, Float &outDistance);
+		
 	};
 }
 

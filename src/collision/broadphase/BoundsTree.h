@@ -79,7 +79,7 @@ namespace Positional::Collision
 		void updateMask(const UInt32 &handle, const UInt32 &mask);
 		void remove(const UInt32 &handle);
 
-		void raycast(const Ray &ray, const Float &maxDistance, const UInt32 &mask, const ResultCallback &resultsCallback) const;
+		void raycast(const Ray &ray, const UInt32 &mask, const Float &maxDistance, const ResultCallback &resultsCallback) const;
 		void intersects(const Bounds &bounds, const UInt32 &mask, const ResultCallback &resultsCallback, const bool &exclusive = false) const;
 		void forEachOverlapPair(const ResultPairCallback &resultsCallback, const bool &exclusive = false) const;
 
