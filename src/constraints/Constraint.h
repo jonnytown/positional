@@ -11,6 +11,7 @@ namespace Positional
 	struct Constraint final
 	{
 	private:
+		void (*m_applyForces)(Constraint &, const Float &);
 		void (*m_solvePositions)(Constraint &, const Float &);
 		void (*m_solveVelocities)(Constraint &, const Float &, const Float &);
 
@@ -19,6 +20,11 @@ namespace Positional
 		Ref<Body> bodyB;
 		shared_ptr<void> data;
 		bool ignoreCollisions;
+
+		void applyForces(const Float &dtInvSq)
+		{
+			m_applyForces(*this, dtInvSq);
+		}
 
 		void solvePositions(const Float &dtInvSq)
 		{
@@ -37,6 +43,7 @@ namespace Positional
 		static Constraint create()
 		{
 			Constraint constraint;
+			constraint.m_applyForces = ConstraintT::applyForces;
 			constraint.m_solvePositions = ConstraintT::solvePositions;
 			constraint.m_solveVelocities = ConstraintT::solveVelocities;
 			constraint.data = make_shared<DataT>();

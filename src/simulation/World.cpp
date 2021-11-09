@@ -230,6 +230,12 @@ namespace Positional
 
 		for (UInt32 s = 0; s < subSteps; ++s)
 		{
+			// constraint fores
+			for (UInt32 i = 0, count = m_constraints.count(); i < count; ++i)
+			{
+				m_constraints[i].applyForces(h);
+			}
+
 			// integrate
 			for (UInt32 i = 0, count = m_bodies.count(); i < count; ++i)
 			{

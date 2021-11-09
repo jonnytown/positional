@@ -110,6 +110,7 @@ namespace Positional
 			Pose results(usesRotation);
 			results.position = -position;
 			results.rotation = rotation.conjugate();
+			return results;
 		}
 
 		inline Vec3 transform(const Vec3 &point) const { return m_transform(*this, point); }

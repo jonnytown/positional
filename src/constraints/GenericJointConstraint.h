@@ -1,5 +1,5 @@
-#ifndef JOINT_CONSTRAINT_H
-#define JOINT_CONSTRAINT_H
+#ifndef GENERIC_JOINT_CONSTRAINT_H
+#define GENERIC_JOINT_CONSTRAINT_H
 
 #include "Constraint.h"
 
@@ -63,10 +63,11 @@ namespace Positional
 			}
 		};
 
+		static void applyForces(Constraint &constraint, const Float &dtInvSq) {}
 		static void solvePositions(Constraint &constraint, const Float &dtInvSq);
 		static void solveVelocities(Constraint &constraint, const Float &dt, const Float &dtInvSq);
 	private:
 		GenericJointConstraint() = delete;
 	};
 }
-#endif // JOINT_CONSTRAINT_H
+#endif // GENERIC_JOINT_CONSTRAINT_H

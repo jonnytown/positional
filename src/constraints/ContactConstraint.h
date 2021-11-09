@@ -48,6 +48,7 @@ namespace Positional
 			}
 		};
 
+		static void applyForces(Constraint &constraint, const Float &dtInvSq) {}
 		static void solvePositions(Constraint &constraint, const Float &dtInvSq);
 		static void solveVelocities(Constraint &constraint, const Float &dt, const Float &dtInvSq);
 

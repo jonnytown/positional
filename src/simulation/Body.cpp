@@ -6,7 +6,7 @@ namespace Positional
 {
 	const Ref<Body> Body::null = Ref<Body>();
 
-	void Body::updateMass()
+	bool Body::updateMass()
 	{
 		Mass::Computer computer;
 		for (UInt32 i = 0, count = m_colliders.size(); i < count; ++i)
@@ -25,11 +25,14 @@ namespace Positional
 			massPose.rotation = rot;
 			invInertia = 1 / inertia;
 			invMass = 1 / mass;
+			return true;
 		}
-		else
-		{
-			throw std::runtime_error("could not diagonalize inertia tensor");
-		}
+
+		massPose.position = Vec3::zero;
+		massPose.rotation = Quat::identity;
+		invInertia = Vec3::zero;
+		invMass = 0;
+		return false;
 	}
 
 	Float Body::getInverseMass(const Vec3 &normal, const optional<Vec3> &pos)
@@ -78,7 +81,8 @@ namespace Positional
 		).normalize();
 
 		// maintain center of mass position in world space
-		pose.position = pose.position + (worldCOM - pose.transform(massPose.position));
+		const Vec3 offset = pose.transform(massPose.position) - pose.position;
+		pose.position = worldCOM - offset;
 	}
 
 	void Body::applyCorrection(const Vec3 &correction, const optional<Vec3> &pos, const bool &velLevel)
@@ -101,11 +105,6 @@ namespace Positional
 		{
 			dq = correction;
 		}
-
-		//const Vec3 I = pose.rotate(massPose.rotate(invInertia));
-		//dq.x *= I.x;
-		//dq.y *= I.y;
-		//dq.z *= I.z;
 
 		dq = massPose.inverseRotate(pose.inverseRotate(dq));
 		dq.x *= invInertia.x;

@@ -2,7 +2,6 @@
 
 namespace Positional
 {
-	#pragma optimize("", off)
 	inline void getPositions(const Constraint &constraint, const GenericJointConstraint::Data *data, Vec3 &outPosA, Vec3 &outPosB)
 	{
 		outPosA = data->poseA.position;
@@ -335,5 +334,4 @@ namespace Positional
 			constraint.applyCorrections(vel, 0, dtInvSq, true, posA, posB);
 		}
 	}
-#pragma optimize("", on)
 } // namespace Positional

@@ -48,6 +48,9 @@ namespace Positional
 		VelocityPose velocity;
 		VelocityPose preVelocity;
 
+		// external forces
+		VelocityPose externalForces;
+
 		// mass
 		Pose massPose;
 		Float invMass;
@@ -60,6 +63,8 @@ namespace Positional
 		{
 			prePose = pose;
 			m_integrate(*this, dt, gravity);
+			externalForces.linear = Vec3::zero;
+			externalForces.angular = Vec3::zero;
 		}
 		inline void differentiate(const Float &dtInv)
 		{
@@ -91,7 +96,7 @@ namespace Positional
 		 */
 		void applyCorrection(const Vec3 &correction, const optional<Vec3> &pos = std::nullopt, const bool &velLevel = false);
 
-		void updateMass();
+		bool updateMass();
 
 		template <typename T>
 		static Body create(World *world, const Vec3 &position, const Quat &rotation)
