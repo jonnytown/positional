@@ -24,9 +24,9 @@ namespace Positional
 			Bounds bounds = Bounds(
 				collider.pointToWorld(Vec3::zero),
 				Vec3(
-					Math::abs(axis.x*l_2) + Math::abs(collider.shape.radius* Math::sqrt(1-axis.x*axis.x)),
-					Math::abs(axis.y*l_2) + Math::abs(collider.shape.radius* Math::sqrt(1-axis.y*axis.y)),
-					Math::abs(axis.z*l_2) + Math::abs(collider.shape.radius* Math::sqrt(1-axis.z*axis.z))));
+					Math::abs(axis.x * l_2) + collider.shape.radius * Math::sqrt(1-axis.x * axis.x),
+					Math::abs(axis.y * l_2) + collider.shape.radius * Math::sqrt(1-axis.y * axis.y),
+					Math::abs(axis.z * l_2) + collider.shape.radius * Math::sqrt(1-axis.z * axis.z)));
 			return bounds;
 		}
 

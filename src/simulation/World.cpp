@@ -243,14 +243,15 @@ namespace Positional
 			}
 
 			// solve positions for each constraint
-			for (UInt32 i = 0; i < m_contactCount; ++i)
-			{
-				m_contacts[i].solvePositions(hInvSq);
-			}
-
 			for (UInt32 i = 0, count = m_constraints.count(); i < count; ++i)
 			{
 				m_constraints[i].solvePositions(hInvSq);
+			}
+
+			
+			for (UInt32 i = 0; i < m_contactCount; ++i)
+			{
+				m_contacts[i].solvePositions(hInvSq);
 			}
 
 			// differentiate

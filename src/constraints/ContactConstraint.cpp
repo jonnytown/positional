@@ -5,7 +5,7 @@
 
 namespace Positional
 {
-
+#pragma optimize("", off)
 	inline void getContacts(const Constraint &constraint, const ContactConstraint::Data *data, Vec3 &posA, Vec3 &posB)
 	{
 		posA = Body::pointToWorld(constraint.bodyA, data->contact.pointA);
@@ -135,4 +135,5 @@ namespace Positional
 			constraint.applyCorrections(dynamicFriction, 0, dtInvSq, true, posA, posB);
 		}
 	}
+	#pragma optimize("", on)
 }

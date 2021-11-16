@@ -11,7 +11,7 @@ namespace Positional
 		static void integrate(Body &body, const Float &dt, const Vec3 &gravity)
 		{
 			// TODO: apply all external forces
-			body.velocity.linear = body.velocity.linear + dt * gravity + dt * body.invMass * body.externalForces.linear;
+			body.velocity.linear = body.velocity.linear + dt * gravity + dt * body.invMass * body.forces.linear;
 			body.pose.position = body.pose.position + dt * body.velocity.linear;
 		}
 

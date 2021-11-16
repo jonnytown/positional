@@ -18,12 +18,12 @@ namespace Positional
 
 			if (constraint.bodyA.valid())
 			{
-				constraint.bodyA.get().externalForces.angular = constraint.bodyA.get().externalForces.angular + torque;
+				constraint.bodyA.get().forces.angular += torque;
 			}
 
 			if (constraint.bodyB.valid())
 			{
-				constraint.bodyB.get().externalForces.angular = constraint.bodyB.get().externalForces.angular - torque;
+				constraint.bodyB.get().forces.angular -= torque;
 			}
 		}
 	}

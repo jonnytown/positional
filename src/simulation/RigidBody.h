@@ -9,16 +9,16 @@ namespace Positional
 	{
 		static void integrate(Body &body, const Float &dt, const Vec3 &gravity)
 		{
-			body.velocity.linear = body.velocity.linear + dt * gravity + dt * body.invMass * body.externalForces.linear;
-			body.pose.position = body.pose.position + dt * body.velocity.linear;
+			body.velocity.linear += dt * gravity + dt * body.invMass * body.forces.linear;
+			body.pose.position += dt * body.velocity.linear;
 
-			Vec3 dOmega = body.massPose.inverseRotate(body.pose.inverseRotate(body.externalForces.angular * dt));
+			Vec3 dOmega = body.massPose.inverseRotate(body.pose.inverseRotate(body.forces.angular * dt));
 			dOmega.x *= body.invInertia.x;
 			dOmega.y *= body.invInertia.y;
 			dOmega.z *= body.invInertia.z;
 			dOmega = body.pose.rotate(body.massPose.rotate(dOmega));
 
-			body.velocity.angular = body.velocity.angular + dOmega;
+			body.velocity.angular += dOmega;
 			body.applyRotation(body.velocity.angular, dt);
 		}
 

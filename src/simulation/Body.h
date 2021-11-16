@@ -49,7 +49,7 @@ namespace Positional
 		VelocityPose preVelocity;
 
 		// external forces
-		VelocityPose externalForces;
+		VelocityPose forces;
 
 		// mass
 		Pose massPose;
@@ -63,8 +63,8 @@ namespace Positional
 		{
 			prePose = pose;
 			m_integrate(*this, dt, gravity);
-			externalForces.linear = Vec3::zero;
-			externalForces.angular = Vec3::zero;
+			forces.linear = Vec3::zero;
+			forces.angular = Vec3::zero;
 		}
 		inline void differentiate(const Float &dtInv)
 		{
@@ -84,6 +84,16 @@ namespace Positional
 		inline Vec3 getPreVelocityAt(const Vec3 &point) const
 		{
 			return preVelocity.linear - (point - prePose.transform(massPose.position)).cross(preVelocity.angular);
+		}
+
+		inline void applyForce(const Vec3 &force)
+		{
+			forces.linear += force;
+		}
+
+		inline void applyTorque(const Vec3 &torque)
+		{
+			forces.angular += torque;
 		}
 
 		/*
