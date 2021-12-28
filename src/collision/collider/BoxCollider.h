@@ -29,7 +29,7 @@ namespace Positional
 			return bounds;
 		}
 
-		static Float volume(const Collider &collider) { return Mass::boxVolume(collider.shape.extents); }
+		static Float volume(const Collider &collider) { return Volume::box(collider.shape.extents); }
 
 		static bool raycast(const Collider &collider, const Ray &ray, const Float &maxDistance, Vec3 &outPoint, Vec3 &outNormal, Float &outDistance)
 		{

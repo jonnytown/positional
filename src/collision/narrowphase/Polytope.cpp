@@ -1,39 +1,54 @@
 #include "Polytope.h"
 
-namespace Positional::Collision
+namespace Positional::Collision::Polytope
 {
-	Polytope::Polytope(const Vec3 _vertices[4], const Vec3 _verticesA[4], const Vec3 _verticesB[4])
+	template <UInt32 VERT_CAP, UInt32 TRI_CAP>
+	void init<VERT_CAP, TRI_CAP>(CSO<VERT_CAP, TRI_CAP> &poly)
 	{
-		vertices.insert(vertices.end(), _vertices, _vertices + 4);
-		verticesA.insert(verticesA.end(), _verticesA, _verticesA + 4);
-		verticesB.insert(verticesB.end(), _verticesB, _verticesB + 4);
+		poly.vertCount = 4;
+		poly.triCount = 4;
 
 		// fix winding so that v[0] - v[1] - v[2] is CCW
-		const Vec3 U = _vertices[0] - _vertices[3];
-		const Vec3 V = _vertices[1] - _vertices[3];
-		const Vec3 W = _vertices[2] - _vertices[3];
+		const Vec3 U = poly.vertices[0].p - poly.vertices[3].p;
+		const Vec3 V = poly.vertices[1].p - poly.vertices[3].p;
+		const Vec3 W = poly.vertices[2].p - poly.vertices[3].p;
 		const Float det = U.dot(V.cross(W));
 		if (det < 0.0)
 		{
 			// if the determinant is negative it means our face normals are facing outwards
-			tris = vector<UInt16>({
-				1, 0, 2,
-				1, 3, 0,
-				1, 2, 3,
-				0, 3, 2 });
+			poly.tris[0] = 1;
+			poly.tris[1] = 0;
+			poly.tris[2] = 2;
+			poly.tris[3] = 1;
+			poly.tris[4] = 3;
+			poly.tris[5] = 0;
+			poly.tris[6] = 1;
+			poly.tris[7] = 2;
+			poly.tris[8] = 3;
+			poly.tris[9] = 0;
+			poly.tris[10] = 3;
+			poly.tris[11] = 2;
 		}
 		else
 		{
-			tris = vector<UInt16>({
-				0, 1, 2,
-				0, 3, 1,
-				0, 2, 3,
-				1, 3, 2 });
+			poly.tris[0] = 0;
+			poly.tris[1] = 1;
+			poly.tris[2] = 2;
+			poly.tris[3] = 0;
+			poly.tris[4] = 3;
+			poly.tris[5] = 1;
+			poly.tris[6] = 0;
+			poly.tris[7] = 2;
+			poly.tris[8] = 3;
+			poly.tris[9] = 1;
+			poly.tris[10] = 3;
+			poly.tris[11] = 2;
 		}
 
-		for (UInt16 i = 0, count = tris.size(); i < count; i += 3)
+		for (UInt32 i = 0; i < poly.triCount; i++)
 		{
-			normals.push_back(GeomUtil::normal(vertices[tris[i]], vertices[tris[i + 1]], vertices[tris[i + 2]]));
+			UInt32 t = i * 3;
+			poly.normals[i] = GeomUtil::normal(poly.vertices[poly.tris[t]].p, poly.vertices[poly.tris[t + 1]].p, poly.vertices[poly.tris[t + 2]].p);
 		}
 	}
 
@@ -85,21 +100,22 @@ namespace Positional::Collision
 		return nearestOnSegment(b, c);
 	}
 
-	Vec3 Polytope::nearest(Float &outLenSq, UInt16 &outTriIndex) const
+	template <UInt32 VERT_CAP, UInt32 TRI_CAP>
+	Vec3 nearest<VERT_CAP, TRI_CAP>(const CSO<VERT_CAP, TRI_CAP> &poly, Float &outLenSq, UInt32 &outTriIndex)
 	{
 		Vec3 nearest = nearestOnTriangle(
-			vertices[tris[0]],
-			vertices[tris[1]],
-			vertices[tris[2]]);
+			poly.vertices[poly.tris[0]].p,
+			poly.vertices[poly.tris[1]].p,
+			poly.vertices[poly.tris[2]].p);
 		outLenSq = nearest.lengthSq();
 		outTriIndex = 0;
 
-		for (UInt16 i = 3, count = tris.size(); i < count; i += 3)
+		for (UInt32 i = 3, count = poly.triCount * 3; i < count; i += 3)
 		{
 			const Vec3 near = nearestOnTriangle(
-				vertices[tris[i]],
-				vertices[tris[i+1]],
-				vertices[tris[i+2]]);
+				poly.vertices[poly.tris[i]].p,
+				poly.vertices[poly.tris[i + 1]].p,
+				poly.vertices[poly.tris[i + 2]].p);
 
 			const Float dSq = near.lengthSq();
 			if (dSq < outLenSq)
@@ -113,80 +129,94 @@ namespace Positional::Collision
 		return nearest;
 	}
 
-	inline void addEdge(vector<UInt16>& edges, const UInt16& a, const UInt16& b)
+	inline void addEdge(UInt32 edges[], UInt32 &edgeCount, const UInt32 &a, const UInt32 &b)
 	{
 		// does the opposite edge exist? if so, remove that edge and return early
-		for (UInt16 i = 0, count = edges.size(); i < count; i += 2)
+		for (UInt32 i = 0, count = edgeCount * 2; i < count; i += 2)
 		{
 			if (edges[i] == b && edges[i + 1] == a)
 			{
-				const auto begin = edges.begin() + i;
-				edges.erase(begin, begin + 2);
+				// fast erase
+				if (i < count - 2)
+				{
+					UInt32 lastIndex = count - 2;
+					edges[i] = edges[lastIndex];
+					edges[i+1] = edges[lastIndex+1];
+				}
+				edgeCount--;
 				return;
 			}
 		}
 
-		edges.push_back(a);
-		edges.push_back(b);
+		edges[edgeCount*2] = a;
+		edges[edgeCount*2+1] = b;
+		edgeCount++;
 	}
 
-	inline void clearTri(vector<UInt16> &tris, vector<Vec3> &normals, vector<UInt16> &edges, const UInt16 &triIndex)
+	inline void clearTri(UInt32 tris[], Vec3 normals[], UInt32 &triCount, UInt32 edges[], UInt32 &edgeCount, const UInt32 &triIndex)
 	{
-		const UInt16 index = triIndex * 3;
+		const UInt32 t = triIndex * 3;
 
-		addEdge(edges, tris[index], tris[index + 1]);
-		addEdge(edges, tris[index + 1], tris[index + 2]);
-		addEdge(edges, tris[index + 2], tris[index]);
+		addEdge(edges, edgeCount, tris[t], tris[t + 1]);
+		addEdge(edges, edgeCount, tris[t + 1], tris[t + 2]);
+		addEdge(edges, edgeCount, tris[t + 2], tris[t]);
 
-		const auto begin = tris.begin() + index;
-		tris.erase(begin, begin + 3);
-		normals.erase(normals.begin() + triIndex);
+		if (triIndex < triCount - 1)
+		{
+			// fast erase
+			const UInt32 lastIndex = (triCount - 1) * 3;
+			tris[t] = tris[lastIndex];
+			tris[t + 1] = tris[lastIndex + 1];
+			tris[t + 2] = tris[lastIndex + 2];
+
+			normals[triIndex] = normals[triCount -1];
+		}
+		triCount--;
 	}
 
-
-	void Polytope::expand(const Vec3 &p, const Vec3 &a, const Vec3 &b, const UInt16 &startTriIndex)
+	template <UInt32 VERT_CAP, UInt32 TRI_CAP>
+	void expand<VERT_CAP, TRI_CAP>(CSO<VERT_CAP, TRI_CAP> &poly, const Vec3 &p, const Vec3 &a, const Vec3 &b, const UInt32 &startTriIndex)
 	{
-		vector<UInt16> edges;
-		clearTri(tris, normals, edges, startTriIndex);
+		UInt32 edges[VERT_CAP*2];
+		UInt32 edgeCount = 0;
+		clearTri(poly.tris, poly.normals, poly.triCount, edges, edgeCount, startTriIndex);
 
 		// clear additional tris that are facing the new point
-		UInt16 triCount = tris.size() / 3;
-		for (UInt16 i = triCount; i > 0; --i)
+		for (UInt32 i = poly.triCount; i > 0; --i)
 		{
-			const UInt16 triIdx = i - 1;
-			const UInt16 idx = triIdx * 3;
-			const Float dot = normals[triIdx].dot(p - vertices[tris[idx]]);
+			const UInt32 triIdx = i - 1;
+			const UInt32 idx = triIdx * 3;
+			const Float dot = poly.normals[triIdx].dot(p - poly.vertices[poly.tris[idx]].p);
 			if (dot > 0)
 			{
-				clearTri(tris, normals, edges, triIdx);
+				clearTri(poly.tris, poly.normals, poly.triCount, edges, edgeCount, triIdx);
 			}
 		}
 
-		// add vertex
-		vertices.push_back(p);
-		verticesA.push_back(a);
-		verticesB.push_back(b);
-		UInt16 index = vertices.size() - 1;
-
 		// patch hole
-		for (UInt16 i = 0, count = edges.size(); i < count; i += 2)
+		for (UInt32 i = 0, count = edgeCount*2; i < count; i += 2)
 		{
-			const Vec3 n = GeomUtil::normal(p, vertices[edges[i]], vertices[edges[i + 1]]);
-			tris.push_back(index);
+			const Vec3 n = GeomUtil::normal(p, poly.vertices[edges[i]].p, poly.vertices[edges[i + 1]].p);
+			const UInt32 t = poly.triCount * 3;
+			poly.tris[t] = poly.vertCount;
 			// keep winding
 			if (n.dot(p) > 0)
 			{
-				tris.push_back(edges[i]);
-				tris.push_back(edges[i + 1]);
-				normals.push_back(n);
+				poly.tris[t + 1] = edges[i];
+				poly.tris[t + 2] = edges[i + 1];
+				poly.normals[poly.triCount] = n;
 			}
 			else
 			{
-				tris.push_back(edges[i + 1]);
-				tris.push_back(edges[i]);
-				normals.push_back(-n);
+				poly.tris[t + 1] = edges[i + 1];
+				poly.tris[t + 2] = edges[i];
+				poly.normals[poly.triCount] = -n;
 			}
+			poly.triCount++;
 		}
+
+		// add vertex
+		poly.vertices[poly.vertCount] = {p, a, b};
+		poly.vertCount++;
 	}
-	
 } // namespace Positional::Collision

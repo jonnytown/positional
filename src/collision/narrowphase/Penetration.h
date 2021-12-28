@@ -6,14 +6,15 @@
 #define PENETRATION_H
 
 #include "math/Math.h"
-#include "Simplex.h"
-#include "Polytope.h"
+#include "CSO.h"
 #include "ContactPoint.h"
 #include <functional>
 #include "collision/collider/Collider.h"
 
 namespace Positional::Collision
 {
+	typedef CSO<32, 128> GJK_EPA_CSO;
+
 	static struct Penetration 
 	{
 		static bool sphereSphere(const Collider &a, const Collider &b, ContactPoint &outContact);
@@ -22,8 +23,8 @@ namespace Positional::Collision
 		static bool sphereCapsule(const Collider &sphere, const Collider &capsule, const bool &swapped, ContactPoint &outContact);
 
 		static bool gjk_epa(const Collider &a, const Collider &b, ContactPoint &outContact);
-		static bool gjk(const Collider& a, const Collider& b, Simplex& outSimplex);
-		static void epa(const Collider &a, const Collider &b, const UInt8 &count, Polytope &outPolytope, ContactPoint &outContact);
+		static bool gjk(const Collider &a, const Collider &b, GJK_EPA_CSO &outSimplex);
+		static void epa(const Collider &a, const Collider &b, GJK_EPA_CSO &outPolytope, ContactPoint &outContact);
 
 	private:
 		Penetration() = delete;

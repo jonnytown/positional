@@ -229,7 +229,7 @@ namespace Positional::Mass
 			assert (extents.x > 0 && extents.y > 0 && extents.z > 0);
 
 			// Setup inertia tensor for a cube with unit density
-			Float m = boxVolume(extents) * density;
+			Float m = Volume::box(extents) * density;
 			Float s = (1.0 / 3.0) * m;
 
 			Float x = extents.x * extents.x;
@@ -248,7 +248,7 @@ namespace Positional::Mass
 
 		void setSphere(const Float &radius, const Float &density)
 		{
-			Float m = sphereVolume(radius) * density;
+			Float m = Volume::sphere(radius) * density;
 			// Compute moment of inertia
 			Float s = m * radius * radius * (2.0 / 5.0);
 			setDiagonal(Vec3(s), m);
@@ -263,7 +263,7 @@ namespace Positional::Mass
 		void setCapsule(const Float &radius, const Float &length, const Float &density)
 		{
 			// Compute mass of capsule
-			Float m = capsuleVolume(radius, length) * density;
+			Float m = Volume::capsule(radius, length) * density;
 			
 			Float r2 = radius * radius;
 			Float l_2 = length * 0.5;
@@ -288,7 +288,7 @@ namespace Positional::Mass
 		void setCylinder(const Float &radius, const Float &length, const Float &density)
 		{
 			// Compute mass of capsule
-			Float m = cylinderVolume(radius, length) * density;
+			Float m = Volume::cylinder(radius, length) * density;
 
 			Float r2 = radius * radius;
 			Float l_2 = length * 0.5;

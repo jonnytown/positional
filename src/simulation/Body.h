@@ -7,7 +7,7 @@
 #include <optional>
 #include "data/Store.h"
 #include "Pose.h"
-#include "VelocityPose.h"
+#include "PoseDelta.h"
 
 using namespace std;
 namespace Positional
@@ -45,11 +45,11 @@ namespace Positional
 		// position
 		Pose pose;
 		Pose prePose;
-		VelocityPose velocity;
-		VelocityPose preVelocity;
+		PoseDelta velocity;
+		PoseDelta preVelocity;
 
 		// external forces
-		VelocityPose forces;
+		PoseDelta forces;
 
 		// mass
 		Pose massPose;

@@ -5,23 +5,17 @@
 #define POLYTOPE_H
 
 #include "math/Math.h"
-#include <vector>
+#include "CSO.h"
 
 using namespace std;
 
-namespace Positional::Collision
+namespace Positional::Collision::Polytope
 {
-	struct Polytope
-	{
-		vector<Vec3> vertices;
-		vector<Vec3> verticesA;
-		vector<Vec3> verticesB;
-		vector<UInt16> tris;
-		vector<Vec3> normals;
-
-		Polytope(const Vec3 _vertices[4], const Vec3 _verticesA[4], const Vec3 _verticesB[4]);
-		Vec3 nearest(Float &outLenSq, UInt16 &outTriIndex) const;
-		void expand(const Vec3 &p, const Vec3 &a, const Vec3 &b, const UInt16 &startTriIndex);
-	};
+	template <UInt32 VERT_CAP, UInt32 TRI_CAP>
+	void init(CSO<VERT_CAP, TRI_CAP> &poly);
+	template <UInt32 VERT_CAP, UInt32 TRI_CAP>
+	Vec3 nearest(const CSO<VERT_CAP, TRI_CAP> &poly, Float &outLenSq, UInt32 &outTriIndex);
+	template <UInt32 VERT_CAP, UInt32 TRI_CAP>
+	void expand(CSO<VERT_CAP, TRI_CAP> &poly, const Vec3 &p, const Vec3 &a, const Vec3 &b, const UInt32 &startTriIndex);
 }
 #endif // POLYTOPE_H

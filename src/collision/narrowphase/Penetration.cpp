@@ -4,6 +4,8 @@
 #include "collision/collider/BoxCollider.h"
 #include "collision/collider/SphereCollider.h"
 #include "collision/collider/CapsuleCollider.h"
+#include "Simplex.h"
+#include "Polytope.h"
 
 namespace Positional::Collision
 {
@@ -167,17 +169,6 @@ namespace Positional::Collision
 		return false;
 	}
 
-	inline void csoSupport(const Collider &a, const Collider &b, const Vec3 &axis, Vec3 &outSupport, Vec3 &outSupportA, Vec3 &outSupportB)
-	{
-		const Vec3 axisA = a.vectorToLocal(axis);
-		const Vec3 axisB = b.vectorToLocal(-axis);
-
-		outSupportA = a.localSupport(axisA);
-		outSupportB = b.localSupport(axisB);
-
-		outSupport = a.pointToWorld(outSupportA) - b.pointToWorld(outSupportB);
-	}
-
 	inline UInt8 leastSignificantComponent(const Vec3 &v)
 	{
 		if (v.x <= v.y && v.x <= v.z)
@@ -195,42 +186,42 @@ namespace Positional::Collision
 
 	bool Penetration::gjk_epa(const Collider &a, const Collider &b, ContactPoint &outContact)
 	{
-		Simplex simplex;
-		const bool gjkPass = gjk(a, b, simplex);
+		GJK_EPA_CSO cso;
+		const bool gjkPass = gjk(a, b, cso);
 		if (gjkPass)
 		{
-			Polytope polytope(simplex.vertices, simplex.verticesA, simplex.verticesB);
-			epa(a, b, simplex.count, polytope, outContact);
+			epa(a, b, cso, outContact);
 			return true;
 		}
 		return false;
 	}
 
-	bool Penetration::gjk(const Collider& a, const Collider& b, Simplex& outSimplex)
+	bool Penetration::gjk(const Collider &a, const Collider &b, GJK_EPA_CSO &outSimplex)
 	{
 		// find initial support vertext using arbitrary first axis
 		Vec3 support, supportA, supportB;
-		csoSupport(a, b, Vec3::pos_x, support, supportA, supportB);
+		Collider::support(a, b, Vec3::pos_x, support, supportA, supportB);
 
-		const UInt8 MAX_ITERS = 16;
-		for (UInt8 i = 0; i < MAX_ITERS; ++i)
+		const UInt32 MAX_ITERS = 16;
+		for (UInt32 i = 0; i < MAX_ITERS; ++i)
 		{
-			outSimplex.add(support, supportA, supportB);
+			Simplex::add(outSimplex, support, supportA, supportB);
 
 			UInt8 nearDim, nearIndex;
-			const Vec3 nearest = outSimplex.nearest(nearDim, nearIndex);
+			const Vec3 nearest = Simplex::nearest(outSimplex, nearDim, nearIndex);
 
 			// nearest is origin: we have a collision
-			if (nearest.lengthSq() < k_gjk_epsilonSq)
+			//if (nearest.lengthSq() < k_gjk_epsilonSq)
+			if (nearest.x == 0 && nearest.y == 0 && nearest.z == 0)
 			{
 				return true;
 			}
 
-			outSimplex.reduce(nearDim, nearIndex);
+			Simplex::reduce(outSimplex, nearDim, nearIndex);
 
 			// negated nearest is vector to origin
 			const Vec3 search = -nearest.normalized();
-			csoSupport(a, b, search, support, supportA, supportB);
+			Collider::support(a, b, search, support, supportA, supportB);
 
 			const Float supportDot = search.dot(support);
 			const Float nearestDot = search.dot(nearest);
@@ -243,10 +234,12 @@ namespace Positional::Collision
 		return false;
 	}
 
-	void Penetration::epa(const Collider &a, const Collider &b, const UInt8 &count, Polytope &outPolytope, ContactPoint &outContact)
+	const UInt32 MAX_EPA_ITERS = 28;
+
+	void Penetration::epa(const Collider &a, const Collider &b, GJK_EPA_CSO &ioPolytope, ContactPoint &outContact)
 	{
 		// expand cso to tetrahedron if it is not alread
-		switch (count)
+		switch (ioPolytope.vertCount)
 		{
 		case 1:
 			{
@@ -255,8 +248,8 @@ namespace Positional::Collision
 
 				for (UInt8 i = 0; i < 6; ++i)
 				{
-					csoSupport(a, b, searches[i], outPolytope.vertices[1], outPolytope.verticesA[1], outPolytope.verticesB[1]);
-					if (outPolytope.vertices[0].distanceSq(outPolytope.vertices[1]) > k_epa_epsilonSq)
+					Collider::support(a, b, searches[i], ioPolytope.vertices[1].p, ioPolytope.vertices[1].a, ioPolytope.vertices[1].b);
+					if (ioPolytope.vertices[0].p.distanceSq(ioPolytope.vertices[1].p) > k_epa_epsilonSq)
 					{
 						break;
 					}
@@ -268,7 +261,7 @@ namespace Positional::Collision
 				static const Vec3 axes[3] = {Vec3::pos_x, Vec3::pos_y, Vec3::pos_z};
 				static const Float pi_3 = Math::Pi / 3.0;
 
-				const Vec3 v = outPolytope.vertices[1] - outPolytope.vertices[0];
+				const Vec3 v = ioPolytope.vertices[1].p - ioPolytope.vertices[0].p;
 
 				const UInt8 leastSigAxis = leastSignificantComponent(v);
 
@@ -277,9 +270,9 @@ namespace Positional::Collision
 
 				for (UInt8 i = 0; i < 6; ++i)
 				{
-					csoSupport(a, b, search, outPolytope.vertices[2], outPolytope.verticesA[2], outPolytope.verticesB[2]);
+					Collider::support(a, b, search, ioPolytope.vertices[2].p, ioPolytope.vertices[2].a, ioPolytope.vertices[2].b);
 
-					if (outPolytope.vertices[2].lengthSq() > k_epa_epsilonSq)
+					if (ioPolytope.vertices[2].p.lengthSq() > k_epa_epsilonSq)
 					{
 						break;
 					}
@@ -290,16 +283,16 @@ namespace Positional::Collision
 			[[fallthrough]]; // end segment to triangle
 		case 3:
 			{
-				const Vec3 u = outPolytope.vertices[1] - outPolytope.vertices[0];
-				const Vec3 v = outPolytope.vertices[2] - outPolytope.vertices[0];
+				const Vec3 u = ioPolytope.vertices[1].p - ioPolytope.vertices[0].p;
+				const Vec3 v = ioPolytope.vertices[2].p - ioPolytope.vertices[0].p;
 				Vec3 search = u.cross(v).normalize();
 
-				csoSupport(a, b, search, outPolytope.vertices[3], outPolytope.verticesA[3], outPolytope.verticesB[3]);
+				Collider::support(a, b, search, ioPolytope.vertices[3].p, ioPolytope.vertices[3].a, ioPolytope.vertices[3].b);
 
-				if (outPolytope.vertices[3].lengthSq() < k_epa_epsilonSq)
+				if (ioPolytope.vertices[3].p.lengthSq() < k_epa_epsilonSq)
 				{
 					search = -search;
-					csoSupport(a, b, search, outPolytope.vertices[3], outPolytope.verticesA[3], outPolytope.verticesB[3]);
+					Collider::support(a, b, search, ioPolytope.vertices[3].p, ioPolytope.vertices[3].a, ioPolytope.vertices[3].b);
 				}
 			}
 			break; //end triangle to tetrahedron
@@ -307,23 +300,23 @@ namespace Positional::Collision
 			break;
 		}
 
-		UInt16 nearestTriIdx;
-		Float nearestLenSq;
-		Vec3 nearest = outPolytope.nearest(nearestLenSq, nearestTriIdx);
+		Polytope::init(ioPolytope);
 
-		const UInt8 MAX_ITERS = 16;
-		for (UInt8 i = 0; i < MAX_ITERS; ++i)
+		UInt32 nearestTriIdx;
+		Float nearestLenSq;
+		Vec3 nearest = Polytope::nearest(ioPolytope, nearestLenSq, nearestTriIdx);
+		for (UInt32 i = 0; i < MAX_EPA_ITERS; ++i)
 		{
-			const Vec3 search = outPolytope.normals[nearestTriIdx].normalized();
+			const Vec3 search = ioPolytope.normals[nearestTriIdx].normalized();
 
 			Vec3 support, supportA, supportB;
-			csoSupport(a, b, search, support, supportA, supportB);
+			Collider::support(a, b, search, support, supportA, supportB);
 
-			outPolytope.expand(support, supportA, supportB, nearestTriIdx);
+			Polytope::expand(ioPolytope, support, supportA, supportB, nearestTriIdx);
 
-			UInt16 idx;
+			UInt32 idx;
 			Float lenSq;
-			Vec3 point = outPolytope.nearest(lenSq, idx);
+			Vec3 point = Polytope::nearest(ioPolytope, lenSq, idx);
 
 			const bool closeEnough = Math::approx(nearestLenSq, lenSq, k_epa_epsilonSq);
 
@@ -337,26 +330,30 @@ namespace Positional::Collision
 			}
 		}
 
-		const UInt16 tidx = nearestTriIdx * 3ui16;
-		const UInt16 ia = outPolytope.tris[tidx];
-		const UInt16 ib = outPolytope.tris[tidx + 1ui16];
-		const UInt16 ic = outPolytope.tris[tidx + 2ui16];
+		const UInt32 tidx = nearestTriIdx * 3;
+		const UInt32 ia = ioPolytope.tris[tidx];
+		const UInt32 ib = ioPolytope.tris[tidx + 1];
+		const UInt32 ic = ioPolytope.tris[tidx + 2];
+
+		const Vertex &va = ioPolytope.vertices[ia];
+		const Vertex &vb = ioPolytope.vertices[ib];
+		const Vertex &vc = ioPolytope.vertices[ic];
 
 		const Vec3 bary = GeomUtil::barycentric(
 			nearest,
-			outPolytope.vertices[ia],
-			outPolytope.vertices[ib],
-			outPolytope.vertices[ic]);
+			va.p,
+			vb.p,
+			vc.p);
 
 		outContact.pointA = Body::pointToLocal(a.body(), a.pointToWorld(
-			outPolytope.verticesA[ia] * bary.x
-			+ outPolytope.verticesA[ib] * bary.y
-			+ outPolytope.verticesA[ic] * bary.z));
+			va.a * bary.x
+			+ vb.a * bary.y
+			+ vc.a * bary.z));
 
 		outContact.pointB = Body::pointToLocal(b.body(), b.pointToWorld(
-			outPolytope.verticesB[ia] * bary.x
-			+ outPolytope.verticesB[ib] * bary.y
-			+ outPolytope.verticesB[ic] * bary.z));
+			va.b * bary.x
+			+ vb.b * bary.y
+			+ vc.b * bary.z));
 
 
 		outContact.depth = Math::sqrt(nearestLenSq);

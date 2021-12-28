@@ -165,6 +165,17 @@ namespace Positional
 		Vec3 pointToLocal(const Vec3 &point) const;
 		Vec3 vectorToLocal(const Vec3 &vector) const;
 
+		static inline void support(const Collider &a, const Collider &b, const Vec3 &axis, Vec3 &outSupport, Vec3 &outSupportA, Vec3 &outSupportB)
+		{
+			const Vec3 axisA = a.vectorToLocal(axis);
+			const Vec3 axisB = b.vectorToLocal(-axis);
+
+			outSupportA = a.localSupport(axisA);
+			outSupportB = b.localSupport(axisB);
+
+			outSupport = a.pointToWorld(outSupportA) - b.pointToWorld(outSupportB);
+		}
+
 		template <typename T>
 		inline static Collider create(const Ref<Body> &body, const Vec3 &position, const Quat &rotation, const Shape &shape, const Float &density, const Float &staticFriction, const Float &dynamicFriction, const Float &bounciness)
 		{			

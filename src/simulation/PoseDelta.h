@@ -5,12 +5,12 @@
 
 namespace Positional
 {
-	struct VelocityPose
+	struct PoseDelta
 	{
 		Vec3 linear;
 		Vec3 angular;
 
-		inline VelocityPose &operator=(const VelocityPose &rhs)
+		inline PoseDelta &operator=(const PoseDelta &rhs)
 		{
 			linear = rhs.linear;
 			angular = rhs.angular;

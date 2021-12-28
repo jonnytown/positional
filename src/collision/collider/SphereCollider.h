@@ -20,7 +20,7 @@ namespace Positional
 			return Bounds(collider.pointToWorld(Vec3::zero), Vec3(collider.shape.radius));
 		}
 
-		static Float volume(const Collider &collider) { return Mass::sphereVolume(collider.shape.radius); }
+		static Float volume(const Collider &collider) { return Volume::sphere(collider.shape.radius); }
 
 		static bool raycast(const Collider &collider, const Ray &ray, const Float &maxDistance, Vec3 &outPoint, Vec3 &outNormal, Float &outDistance)
 		{

@@ -37,16 +37,12 @@ namespace Positional
 
 	Float Body::getInverseMass(const Vec3 &normal, const optional<Vec3> &pos)
 	{
-		Vec3 n;
+		Vec3 n = normal;
 		Float w = 0;
 		if (pos.has_value())
 		{
-			n = (pos.value() - pose.transform(massPose.position)).cross(normal.normalized());
+			n = (pos.value() - pose.transform(massPose.position)).cross(normal);
 			w = invMass;
-		}
-		else
-		{
-			n = normal.normalized();
 		}
 
 		n = massPose.inverseRotate(pose.inverseRotate(n));
